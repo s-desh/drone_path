@@ -10,3 +10,7 @@ Create virtual environment (only once)
     pip3 install -r requirements.txt
     ```
 3. Run `source drone-env/bin/activate` to activate the environment and `deactivate` to ..
+
+## Run
+
+`python3 gym_env/playground.py`
