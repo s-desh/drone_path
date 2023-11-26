@@ -13,7 +13,7 @@ import pybullet as p
 import pybullet_data
 import gymnasium as gym
 from enums import DroneModel, Physics, ImageType
-
+import random
 
 class BaseAviary(gym.Env):
     """Base class for "drone aviary" Gym environments."""
@@ -979,9 +979,9 @@ class BaseAviary(gym.Env):
         These obstacles are loaded from standard URDF files included in Bullet.
 
         """
-        p.loadURDF("samurai.urdf",
-                   physicsClientId=self.CLIENT
-                   )
+        #p.loadURDF("samurai.urdf",
+                   #physicsClientId=self.CLIENT
+                   #)
         # p.loadURDF("duck_vhacd.urdf",
         #            [-.5, -.5, .05],
         #            p.getQuaternionFromEuler([0, 0, 0]),
@@ -992,11 +992,32 @@ class BaseAviary(gym.Env):
         #            p.getQuaternionFromEuler([0, 0, 0]),
         #            physicsClientId=self.CLIENT
         #            )
-        p.loadURDF("assets/lego.urdf",
-                   [-.5, -2.5, .5],
-                   p.getQuaternionFromEuler([0,0,0]),
+        #p.loadURDF("assets/lego.urdf",
+                   #[-.5, -2.5, .5],
+                   #p.getQuaternionFromEuler([0,0,0]),
+                   #physicsClientId=self.CLIENT
+                   #)
+
+        #p.loadURDF("assets/cylinder.urdf", [2, 2, 2]
+            #,physicsClientId=self.CLIENT
+            #)
+
+        num_cylinders = 10
+        area_size = 5
+        #time.sleep(2)
+        for _ in range(num_cylinders):
+            # Random position within the 10x10 area
+            x_cyl = random.uniform(-area_size / 2, area_size / 2)
+            y_cyl = random.uniform(-area_size / 2, area_size / 2)
+            z_cyl = 2  # Assuming the ground is at z=0
+
+            # Spawn the cylinder at the random position
+            p.loadURDF("assets/cylinder.urdf",
+                   [x_cyl ,y_cyl ,z_cyl],
+                   p.getQuaternionFromEuler([0, 0, 0]),
                    physicsClientId=self.CLIENT
                    )
+
     
     ################################################################################
     
