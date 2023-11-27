@@ -973,6 +973,23 @@ class BaseAviary(gym.Env):
     
     ################################################################################
 
+    def check_collision_before_spawn(self, x, y, z, radius, height):
+        # Check for collisions with existing cylinders
+        collision = False
+        for i in range(p.getNumBodies(physicsClientId=self.CLIENT)):
+            body_info = p.getBodyInfo(i, physicsClientId=self.CLIENT)
+            if body_info[0].decode('UTF-8') == "cylinder":
+                # Get the position of the existing cylinder
+                pos, _ = p.getBasePositionAndOrientation(i, physicsClientId=self.CLIENT)
+                # Check if there is a collision with the existing cylinder
+                distance = ((pos[0] - x) ** 2 + (pos[1] - y) ** 2 + (pos[2] - z) ** 2) ** 0.5
+                if distance < (radius + 1.0):  # Adjust the collision distance based on your requirements
+                    collision = True
+                    break
+
+        return collision
+
+    
     def _addObstacles(self):
         """Add obstacles to the environment.
 
@@ -1004,19 +1021,26 @@ class BaseAviary(gym.Env):
 
         num_cylinders = 10
         area_size = 5
-        #time.sleep(2)
+
         for _ in range(num_cylinders):
-            # Random position within the 10x10 area
-            x_cyl = random.uniform(-area_size / 2, area_size / 2)
-            y_cyl = random.uniform(-area_size / 2, area_size / 2)
-            z_cyl = 2  # Assuming the ground is at z=0
+            while True:
+                # Random position within the 10x10 area
+                x_cyl = random.uniform(-area_size / 2, area_size / 2)
+                y_cyl = random.uniform(-area_size / 2, area_size / 2)
+                z_cyl = 2  # Assuming the ground is at z=0
+                radius_cyl = 0.5
+                height_cyl = 2.0
+
+                # Check for collisions before spawning
+                if not self.check_collision_before_spawn(x_cyl, y_cyl, z_cyl, radius_cyl, height_cyl):
+                    break
 
             # Spawn the cylinder at the random position
             p.loadURDF("assets/cylinder.urdf",
-                   [x_cyl ,y_cyl ,z_cyl],
-                   p.getQuaternionFromEuler([0, 0, 0]),
-                   physicsClientId=self.CLIENT
-                   )
+                       [x_cyl, y_cyl, z_cyl],
+                       p.getQuaternionFromEuler([0, 0, 0]),
+                       physicsClientId=self.CLIENT
+                       )
 
     
     ################################################################################
