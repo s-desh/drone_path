@@ -15,7 +15,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="-0.016 -0.016 -0.0115"/>
       <geometry>
-        <cylinder length="3.0" radius="0.2"/>
+        <cylinder length="2.0" radius="0.2"/>
       </geometry>
        <material name="yellow">
         <color rgba="1 1 0.4 1"/>
