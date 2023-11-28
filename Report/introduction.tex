@@ -1,7 +1,21 @@
-Objective: Navigation of a quadcopter in a dynamic environment with multiple obstacles moving in a random motion. Obstacles are represented by cylinders which may represent people moving around in an indoor environment.\\
-Environment: We will use PyBulletDrone environment for this project\\
-Assumptions: The instantaneous state of the system, including instantaneous positions and sizes of all obstacles, is available to the motion planning algorithm.\\
-Procedure:
+%Task  - Multiple agents map a unknown forest environment for obstacles and plan a optimal path for a drone to reach the destination (forest fire).
+Subtasks -
+
+
+
+Objective:
+\begin{enumerate}
+    \item Multiple drones plan and scan the unknown environment. The unknown environment is broken down into multiple grids and the task of the drones is to visit each grid in a cooperative manner.
+    \item The drones detect obstacles around them which are then converted into the initial frame and updated on a common map.
+    \item When a person is found, a different drone using the common map calculates the optimal path to reach their location and provide relief.
+\end{enumerate}
+Environment:
+\begin{enumerate}
+    \item We will use PyBulletDrone environment for this project where cylinders are used to represent trees.
+    \item The environment spawns these trees at random locations throughout the grid which is unknown to the planning algorithm. These obstacles are sensed by the robot as they come within the sensing range of onboard sensors.
+    \item A person is said to be detected when the drone is close enough to their location.
+\end{enumerate}
+Workspace and Configuration:
 \begin{enumerate}
     \item Start with a vanilla \(RRT^*\) algorithm that generates the trajectory in a static environment.
     \item Sampling is done from a 12D C-space (Position, Velocity) taking the kinodynamics of the rotor into account.
