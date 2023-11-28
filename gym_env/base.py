@@ -19,7 +19,7 @@ class BaseAviary(gym.Env):
     """Base class for "drone aviary" Gym environments."""
 
     # metadata = {'render.modes': ['human']}
-    
+
     ################################################################################
 
     def __init__(self,
@@ -36,7 +36,9 @@ class BaseAviary(gym.Env):
                  obstacles=False,
                  user_debug_gui=True,
                  vision_attributes=False,
-                 output_folder='results'
+                 output_folder='results',
+                 num_cylinders=10,  # Control number of cylinders to be made,
+                 area_size=5,  # Area of the environment for our use case.
                  ):
         """Initialization of a generic aviary environment.
 
@@ -70,6 +72,10 @@ class BaseAviary(gym.Env):
             Whether to allocate the attributes needed by vision-based aviary subclasses.
 
         """
+        #### PDM Additions ###################
+        self.num_cylinders = num_cylinders
+        self.area_size = area_size
+        self.cylinder_object_ids = []  # Required to track the position of cylinders.
         #### Constants #############################################
         self.G = 9.8
         self.RAD2DEG = 180/np.pi
@@ -214,7 +220,7 @@ class BaseAviary(gym.Env):
         self._updateAndStoreKinematicInformation()
         #### Start video recording #################################
         self._startVideoRecording()
-    
+
     ################################################################################
 
     def reset(self,
@@ -253,7 +259,7 @@ class BaseAviary(gym.Env):
         initial_obs = self._computeObs()
         initial_info = self._computeInfo()
         return initial_obs, initial_info
-    
+
     ################################################################################
 
     def step(self,
@@ -382,9 +388,9 @@ class BaseAviary(gym.Env):
         #### Advance the step counter ##############################
         self.step_counter = self.step_counter + (1 * self.PYB_STEPS_PER_CTRL)
         return obs, reward, terminated, truncated, info
-    
+
     ################################################################################
-    
+
     def render(self,
                mode='human',
                close=False
@@ -411,7 +417,7 @@ class BaseAviary(gym.Env):
                   "——— velocity {:+06.2f}, {:+06.2f}, {:+06.2f}".format(self.vel[i, 0], self.vel[i, 1], self.vel[i, 2]),
                   "——— roll {:+06.2f}, pitch {:+06.2f}, yaw {:+06.2f}".format(self.rpy[i, 0]*self.RAD2DEG, self.rpy[i, 1]*self.RAD2DEG, self.rpy[i, 2]*self.RAD2DEG),
                   "——— angular velocity {:+06.4f}, {:+06.4f}, {:+06.4f} ——— ".format(self.ang_v[i, 0], self.ang_v[i, 1], self.ang_v[i, 2]))
-    
+
     ################################################################################
 
     def close(self):
@@ -420,7 +426,7 @@ class BaseAviary(gym.Env):
         if self.RECORD and self.GUI:
             p.stopStateLogging(self.VIDEO_ID, physicsClientId=self.CLIENT)
         p.disconnect(physicsClientId=self.CLIENT)
-    
+
     ################################################################################
 
     def getPyBulletClient(self):
@@ -433,7 +439,7 @@ class BaseAviary(gym.Env):
 
         """
         return self.CLIENT
-    
+
     ################################################################################
 
     def getDroneIds(self):
@@ -446,7 +452,7 @@ class BaseAviary(gym.Env):
 
         """
         return self.DRONE_IDS
-    
+
     ################################################################################
 
     def _housekeeping(self):
@@ -505,7 +511,7 @@ class BaseAviary(gym.Env):
             # p.setCollisionFilterPair(bodyUniqueIdA=self.PLANE_ID, bodyUniqueIdB=self.DRONE_IDS[i], linkIndexA=-1, linkIndexB=-1, enableCollision=0, physicsClientId=self.CLIENT)
         if self.OBSTACLES:
             self._addObstacles()
-    
+
     ################################################################################
 
     def _updateAndStoreKinematicInformation(self):
@@ -519,7 +525,7 @@ class BaseAviary(gym.Env):
             self.pos[i], self.quat[i] = p.getBasePositionAndOrientation(self.DRONE_IDS[i], physicsClientId=self.CLIENT)
             self.rpy[i] = p.getEulerFromQuaternion(self.quat[i])
             self.vel[i], self.ang_v[i] = p.getBaseVelocity(self.DRONE_IDS[i], physicsClientId=self.CLIENT)
-    
+
     ################################################################################
 
     def _startVideoRecording(self):
@@ -539,7 +545,7 @@ class BaseAviary(gym.Env):
             self.FRAME_NUM = 0
             self.IMG_PATH = os.path.join(self.OUTPUT_FOLDER, "recording_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"), '')
             os.makedirs(os.path.dirname(self.IMG_PATH), exist_ok=True)
-    
+
     ################################################################################
 
     def _getDroneStateVector(self,
@@ -677,9 +683,9 @@ class BaseAviary(gym.Env):
                 if np.linalg.norm(self.pos[i, :]-self.pos[j+i+1, :]) < self.NEIGHBOURHOOD_RADIUS:
                     adjacency_mat[i, j+i+1] = adjacency_mat[j+i+1, i] = 1
         return adjacency_mat
-    
+
     ################################################################################
-    
+
     def _physics(self,
                  rpm,
                  nth_drone
@@ -752,7 +758,7 @@ class BaseAviary(gym.Env):
                                      flags=p.LINK_FRAME,
                                      physicsClientId=self.CLIENT
                                      )
-    
+
     ################################################################################
 
     def _drag(self,
@@ -783,7 +789,7 @@ class BaseAviary(gym.Env):
                              flags=p.LINK_FRAME,
                              physicsClientId=self.CLIENT
                              )
-    
+
     ################################################################################
 
     def _downwash(self,
@@ -913,7 +919,7 @@ class BaseAviary(gym.Env):
         if np.any(np.abs(action) > 1):
             print("\n[ERROR] it", self.step_counter, "in BaseAviary._normalizedActionToRPM(), out-of-bound action")
         return np.where(action <= 0, (action+1)*self.HOVER_RPM, self.HOVER_RPM + (self.MAX_RPM - self.HOVER_RPM)*action) # Non-linear mapping: -1 -> 0, 0 -> HOVER_RPM, 1 -> MAX_RPM`
-    
+
     ################################################################################
 
     def _saveLastAction(self,
@@ -930,7 +936,7 @@ class BaseAviary(gym.Env):
 
         """
         self.last_action = np.reshape(action, (self.NUM_DRONES, 4))
-    
+
     ################################################################################
 
     def _showDroneLocalAxes(self,
@@ -970,7 +976,7 @@ class BaseAviary(gym.Env):
                                                       replaceItemUniqueId=int(self.Z_AX[nth_drone]),
                                                       physicsClientId=self.CLIENT
                                                       )
-    
+
     ################################################################################
 
     def check_collision_before_spawn(self, x, y, z, radius, height):
@@ -989,7 +995,7 @@ class BaseAviary(gym.Env):
 
         return collision
 
-    
+
     def _addObstacles(self):
         """Add obstacles to the environment.
 
@@ -1019,14 +1025,11 @@ class BaseAviary(gym.Env):
             #,physicsClientId=self.CLIENT
             #)
 
-        num_cylinders = 10
-        area_size = 5
-
-        for _ in range(num_cylinders):
+        for _ in range(self.num_cylinders):
             while True:
-                # Random position within the 10x10 area
-                x_cyl = random.uniform(-area_size / 2, area_size / 2)
-                y_cyl = random.uniform(-area_size / 2, area_size / 2)
+                # Random position within the area
+                x_cyl = random.uniform(-self.area_size / 2, self.area_size / 2)
+                y_cyl = random.uniform(-self.area_size / 2, self.area_size / 2)
                 z_cyl = 2  # Assuming the ground is at z=0
                 radius_cyl = 0.5
                 height_cyl = 2.0
@@ -1036,15 +1039,15 @@ class BaseAviary(gym.Env):
                     break
 
             # Spawn the cylinder at the random position
-            p.loadURDF("assets/cylinder.urdf",
+            self.cylinder_object_ids.append(p.loadURDF("assets/cylinder.urdf",
                        [x_cyl, y_cyl, z_cyl],
                        p.getQuaternionFromEuler([0, 0, 0]),
                        physicsClientId=self.CLIENT
-                       )
+                       ))
 
-    
+
     ################################################################################
-    
+
     def _parseURDFParameters(self):
         """Loads parameters from an URDF file.
 
@@ -1078,9 +1081,9 @@ class BaseAviary(gym.Env):
         DW_COEFF_3 = float(URDF_TREE[0].attrib['dw_coeff_3'])
         return M, L, THRUST2WEIGHT_RATIO, J, J_INV, KF, KM, COLLISION_H, COLLISION_R, COLLISION_Z_OFFSET, MAX_SPEED_KMH, \
                GND_EFF_COEFF, PROP_RADIUS, DRAG_COEFF, DW_COEFF_1, DW_COEFF_2, DW_COEFF_3
-    
+
     ################################################################################
-    
+
     def _actionSpace(self):
         """Returns the action space of the environment.
 
@@ -1088,7 +1091,7 @@ class BaseAviary(gym.Env):
 
         """
         raise NotImplementedError
-    
+
     ################################################################################
 
     def _observationSpace(self):
@@ -1098,9 +1101,9 @@ class BaseAviary(gym.Env):
 
         """
         raise NotImplementedError
-    
+
     ################################################################################
-    
+
     def _computeObs(self):
         """Returns the current observation of the environment.
 
@@ -1108,7 +1111,7 @@ class BaseAviary(gym.Env):
 
         """
         raise NotImplementedError
-    
+
     ################################################################################
 
     def _preprocessAction(self,
@@ -1145,7 +1148,7 @@ class BaseAviary(gym.Env):
 
         """
         raise NotImplementedError
-    
+
     ################################################################################
 
     def _computeTruncated(self):

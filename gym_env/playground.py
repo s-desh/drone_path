@@ -132,54 +132,12 @@ def run(
     START = time.time()
     for i in range(0, int(duration_sec*env.CTRL_FREQ)):
         print(i)
-        #time.sleep(2)
-    #     #### Make it rain rubber ducks #############################
-        #if i/env.SIM_FREQ>5 and i%10==0 and i/env.SIM_FREQ<10: p.loadURDF("duck_vhacd.urdf", [0+random.gauss(0, 0.3),-0.5+random.gauss(0, 0.3),3], p.getQuaternionFromEuler([random.randint(0,360),random.randint(0,360),random.randint(0,360)]), physicsClientId=PYB_CLIENT)
-
-    #     #### Step the simulation ###################################
         obs, reward, terminated, truncated, info = env.step(action)
-
-    #     #### Compute control for the current way point #############
-    #     for j in range(num_drones):
-    #         action[j, :], _, _ = ctrl[j].computeControlFromState(control_timestep=env.CTRL_TIMESTEP,
-    #                                                                 state=obs[j],
-    #                                                                 target_pos=np.hstack([TARGET_POS[wp_counters[j], 0:2], INIT_XYZS[j, 2]]),
-    #                                                                 # target_pos=INIT_XYZS[j, :] + TARGET_POS[wp_counters[j], :],
-    #                                                                 target_rpy=INIT_RPYS[j, :]
-    #                                                                 )
-
-    #     #### Go to the next way point and loop #####################
-    #     for j in range(num_drones):
-    #         wp_counters[j] = wp_counters[j] + 1 if wp_counters[j] < (NUM_WP-1) else 0
-
-    #     #### Log the simulation ####################################
-    #     for j in range(num_drones):
-    #         logger.log(drone=j,
-    #                    timestamp=i/env.CTRL_FREQ,
-    #                    state=obs[j],
-    #                    control=np.hstack([TARGET_POS[wp_counters[j], 0:2], INIT_XYZS[j, 2], INIT_RPYS[j, :], np.zeros(6)])
-    #                    # control=np.hstack([INIT_XYZS[j, :]+TARGET_POS[wp_counters[j], :], INIT_RPYS[j, :], np.zeros(6)])
-    #                    )
-
-    #     #### Printout ##############################################
-        # env.render()
-
-    #     #### Sync the simulation ###################################
-    #     if gui:
-    #         sync(i, START, env.CTRL_TIMESTEP)
-
+        
     #### Close the environment #################################
     env.close()
 
-    #### Save the simulation results ###########################
-    # logger.save()
-    # logger.save_as_csv("pid") # Optional CSV save
 
-    #### Plot the simulation results ###########################
-    # if plot:
-    #     logger.plot()
-
-    ## TODO: move this to utils
 def str2bool(val):
     """Converts a string into a boolean.
 
