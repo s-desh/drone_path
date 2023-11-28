@@ -12,13 +12,11 @@ Environment:
 \end{enumerate}
 Procedure:
 \begin{enumerate}
-    \item Our workspace is \(R^3\). Configuration space of the quadcopter is \(R^3 \times SO(3)\). We will operate
-    \item We shall pla
-    \item Start with a vanilla \(RRT^*\) algorithm that generates the trajectory in a static environment.
-    \item Sampling is done from a 12D C-space (Position, Velocity) taking the kinodynamics of the rotor into account.
-    \item Then make the quadcopter follow this path using an off the shelf control algorithm.
-    \item Implement different flavours of the RRT algorithm for dynamic environments. 
-    \item Compare these algorithm on the basis of their compute time and the path length.
+    \item Our workspace is \(R^3\). Configuration space of the quadcopter is \(R^3 \times SO(3)\). We will plan in the workspace \(R^3\) itself.
+    \item We use a high level planner that directs the drones to scan the environment in a Breadh first search manner. The robots communicate with a central node that directs the search such that 2 drones do not explore the same region.
+    \item The drone gets its next target location from the high level planner. We use the A* algorithm on the common map to plan the path for the drone from its current location to the target location.
+    \item Then make the quadcopters follow this path using an off the shelf control algorithm.
+    \item The algorithm will be evaluated on the time taken to find the lost person and the the time taken to provide aid to the person once found.
 \end{enumerate}
 
 Questions: Should we search for the optimal path in the 3D World space or the 6D C-Space of the robot or 12D Position + Velocity space?
