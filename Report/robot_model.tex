@@ -1,13 +1,6 @@
 
 We have decided to use Quadrotor as our robot. Quadrotor is a type of unmanned aerial vehicle (UAV) or drone that is lifted and propelled by four rotors. Each rotor is mounted at the end of a horizontal arm extending from the central body of the vehicle. 
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.5\linewidth]{image.png}
-\caption{\label{fig:Quadrotor}Quadrotor}
-\end{figure}
-
-
 \section{Working of Quadrotors}
 
 The quadrotor is a highly non-linear, six degree-of-freedom and under-actuated system. It is under-actuated because inputs are only 4 from 4 motors and total degree-of-freedom is 6. It is controlled by varying the thrust forces of each rotor and balancing the drag torque. A quadrotor has two sets of counter-rotating propellers, therefore neutralizing the effective aerodynamic drag. It has four principal modes of operation(Figure 2): 
@@ -18,32 +11,6 @@ The quadrotor is a highly non-linear, six degree-of-freedom and under-actuated s
 \item Pitch can be controlled by applying differential thrust forces on opposite rotors of the quadrotor to have movement with respect to quadrotor's y-axis.
 \end{enumerate}
 
-\begin{figure}[H]
-    \centering
-    \begin{subfigure}{0.45\textwidth}
-      \includegraphics[width=\linewidth]{vertical.png}
-      \label{fig:enter-label}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}{0.45\textwidth}
-      \includegraphics[width=\linewidth]{roll.png}
-      \label{fig:enter-label}
-    \end{subfigure}
-
-    \medskip
-
-    \begin{subfigure}{0.45\textwidth}
-        \includegraphics[width=\linewidth]{pitch.png}
-        \label{fig:enter-label}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}{0.45\textwidth}
-        \includegraphics[width=\linewidth]{yaw.png}
-        \label{fig:enter-label}
-    \end{subfigure}
-\caption{\label{fig:main}Different modes of operation}  
-\end{figure}   
-\\
 
 \section{Quadrotor Model}
 
@@ -53,12 +20,6 @@ The quadrotor is a highly non-linear, six degree-of-freedom and under-actuated s
 
 Each rotor rotates with angular velocity $\omega$ and generates a lift force F and moment M. Moment is acting opposite to the directing of rotation. (Figure 3)
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.5\linewidth]{rotor.png}
-    \caption{Quadrotor arm}
-    \label{fig:enter-label}
-\end{figure}
 
 The lift Force F and moment M of ith rotor can be calculated by:
 
@@ -80,12 +41,6 @@ $D$ is diameter of propeller
 
 \subsection{Equations of Motion}
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.5\linewidth]{variables.png}
-    \caption{Quadrotor in inertial and body frames}
-    \label{fig:enter-label}
-\end{figure}
 
 Total thrust and moment is the sum of individual ones in each of the 4 rotors.
 \vspace{10pt}
