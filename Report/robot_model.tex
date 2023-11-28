@@ -32,13 +32,13 @@ $D$ is diameter of propeller
 
 Total thrust and moment is the sum of individual ones in each of the 4 rotors.
 
-Thrust: $F = F_1 + F_2 + F_3 + F_4 - mga_3$
+Thrust: $F = $\sum F_i$ - mga_3$
 
 Here, $F_x$ are individual lift forces by the propellers and $m*g$ is the one by gravity.
 
-Moment: $M = r_1 * F_1 + r_2 * F_2 + r_3 * F_3 + r_4 * F_4 + M_1 + M_2 + M_3 + M_4$
+Moment: $M = $\sum r_i*F_i + \sum M_i$
 
-Here, $r_x*F_x$ are the moments created by forces in quadrotor's centre of gravity and $M_x$ are the individual moments created by the propellers.
+Here, $r_i*F_i$ are the moments created by forces in quadrotor's centre of gravity and $M_x$ are the individual moments created by the propellers.
 
 
 \subsubsection{Newton-Euler Equations for Quadrotor}
@@ -60,7 +60,7 @@ mass*\ddot{r} = \begin{bmatrix}
 R_\psi\phi\theta \begin{bmatrix}
     0 \\
     0 \\
-    F_1 + F_2 + F_3 + F_4
+    \sum F_i
 \end{bmatrix}
 \]
 \\
@@ -151,8 +151,6 @@ Final equations using Linear and Rotational dynamics equations, we get;
     \omega_4^2
 \end{bmatrix}
 \]
-
-\end{document}
 
 %\subsection{State Variables}
 
