@@ -57,19 +57,10 @@ Keep short - the whole paper shall not exceed four pages plus references (Strict
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{INTRODUCTION}
-Objective: Navigation of a quadcopter in a dynamic environment with multiple obstacles moving in a random motion. Obstacles are represented by cylinders which may represent people moving around in an indoor environment.\\
-Assumptions: The instantaneous state of the system, including instantaneous positions and sizes of all obstacles, is available to the motion planning algorithm.\\
-Procedure:
-\begin{enumerate}
-    \item Start with a vanilla \(RRT^*\) algorithm that generates the trajectory in a static environment. Then make the quadcopter follow this path using an off the shelf control algorithm. 
-    \item Implement different flavours of the RRT algorithm for dynamic environments. 
-    \item Compare these algorithm on the basis of their compute time and the path length.
-\end{enumerate}
-Questions: Should we search for the optimal path in the 3D World space or the 6D C-Space of the robot or 12D Position + Velocity space?
-
+\input{introduction}
 \section{ROBOT MODEL}
- 1/2-1 page
- 
+% 1/2-1 page
+ \input{robot_model}
 \section{MOTION PLANNING}
  1/2-1 page
 

@@ -1,0 +1,11 @@
+Objective: Navigation of a quadcopter in a dynamic environment with multiple obstacles moving in a random motion. Obstacles are represented by cylinders which may represent people moving around in an indoor environment.\\
+Assumptions: The instantaneous state of the system, including instantaneous positions and sizes of all obstacles, is available to the motion planning algorithm.\\
+Procedure:
+\begin{enumerate}
+    \item Start with a vanilla \(RRT^*\) algorithm that generates the trajectory in a static environment.
+    \item Sampling is done from a 12D C-space (Position, Velocity) taking the kinodynamics of the rotor into account.
+    \item Then make the quadcopter follow this path using an off the shelf control algorithm.
+    \item Implement different flavours of the RRT algorithm for dynamic environments. 
+    \item Compare these algorithm on the basis of their compute time and the path length.
+\end{enumerate}
+Questions: Should we search for the optimal path in the 3D World space or the 6D C-Space of the robot or 12D Position + Velocity space?
