@@ -1,25 +1,16 @@
 
-We have decided to use Quadrotor as our robot. Quadrotor is a type of unmanned aerial vehicle (UAV) or drone that is lifted and propelled by four rotors. Each rotor is mounted at the end of a horizontal arm extending from the central body of the vehicle. 
+We have decided to use Quadrotor as our robot.
 
-\section{Working of Quadrotors}
+\subsection{Working of Quadrotors}
 
-The quadrotor is a highly non-linear, six degree-of-freedom and under-actuated system. It is under-actuated because inputs are only 4 from 4 motors and total degree-of-freedom is 6. It is controlled by varying the thrust forces of each rotor and balancing the drag torque. A quadrotor has two sets of counter-rotating propellers, therefore neutralizing the effective aerodynamic drag. It has four principal modes of operation(Figure 2): 
-\begin{enumerate}
-\item Vertical movement is controlled by simultaneously increasing or decreasing the thrust of all rotors.
-\item Yaw moment is created by proportionally varying the speeds of counter-rotating parts to have movement with respect to quadrotor's z-axis.
-\item Roll can be controlled by applying differential thrust forces on opposite rotors of the quadrotor to have movement with respect to quadrotor's x-axis.
-\item Pitch can be controlled by applying differential thrust forces on opposite rotors of the quadrotor to have movement with respect to quadrotor's y-axis.
-\end{enumerate}
+The quadrotor is a highly non-linear, six degree-of-freedom and under-actuated system. A quadrotor has two sets of counter-rotating propellers, therefore neutralizing the effective aerodynamic drag. It has four principal modes of operation: 
+Vertical movement is controlled by simultaneously increasing or decreasing the thrust of all rotors. Yaw moment is created by proportionally varying the speeds of counter-rotating parts to have movement with respect to quadrotor's z-axis. Roll can be controlled by applying differential thrust forces on opposite rotors of the quadrotor to have movement with respect to quadrotor's x-axis. Pitch can be controlled by applying differential thrust forces on opposite rotors of the quadrotor to have movement with respect to quadrotor's y-axis.
 
+\subsection{Quadrotor Model}
 
-\section{Quadrotor Model}
+\subsubsection{Model of a rotor}
 
-
-
-\subsection{Model of a rotor}
-
-Each rotor rotates with angular velocity $\omega$ and generates a lift force F and moment M. Moment is acting opposite to the directing of rotation. (Figure 3)
-
+Each rotor rotates with angular velocity $\omega$ and generates a lift force F and moment M. Moment is acting opposite to the directing of rotation.
 
 The lift Force F and moment M of ith rotor can be calculated by:
 
@@ -27,7 +18,6 @@ $F_i = k_f * \omega_i^2$ \hspace{1cm} and \hspace{2cm} $k_f = k_T*\rho * D^4$
 
 $M_i = k_m * \omega_i^2$ \hspace{1cm} and \hspace{1.8cm} $k_m = k_Q*\rho * D^5$
 
-\vspace{10pt}
 where:
 
 $k_T$ is thrust coefficient
@@ -37,41 +27,27 @@ $k_Q$ is torque
 $rho$ is fluid density
 
 $D$ is diameter of propeller
-\\
 
-\subsection{Equations of Motion}
-
+\subsubsection{Equations of Motion}
 
 Total thrust and moment is the sum of individual ones in each of the 4 rotors.
-\vspace{10pt}
 
 Thrust: $F = F_1 + F_2 + F_3 + F_4 - mga_3$
 
 Here, $F_x$ are individual lift forces by the propellers and $m*g$ is the one by gravity.
-\vspace{10pt}
 
 Moment: $M = r_1 * F_1 + r_2 * F_2 + r_3 * F_3 + r_4 * F_4 + M_1 + M_2 + M_3 + M_4$
 
 Here, $r_x*F_x$ are the moments created by forces in quadrotor's centre of gravity and $M_x$ are the individual moments created by the propellers.
-\\
-
-\subsection{State Variables}
-
-$u, \phi, p$ are the linear velocity along the roll-axis direction, angle rotated and the angular velocity about the roll-axis.
-$w, \psi, r$ is the linear velocity along the yaw-axis direction, angle rotated and the angular velocity about the yaw-axis.
-$v, \theta, q$ is the linear velocity along the pitch-axis direction, angle rotated and the angular velocity about the pitch-axis.
-$x, y, z$ are the position of quadrotor along $a_1, a_2, a_3$ axis of the inertial frame.
-\\
 
 
-\subsection{Newton-Euler Equations for Quadrotor}
+\subsubsection{Newton-Euler Equations for Quadrotor}
 
 \textbf{Linear Dynamics} Applying Newton's Second Law for system of particles, we get (in inertial frame);
 
 $F = mass * acceleration$ 
 
 $acceleration (\ddot{r}) = d\dot{r}/dt$, where $\dot{r} = [u,v,w]^T$ (3.3)
-\vspace{10pt}
 
 Since, $w$ is the yaw-axis in which we calculate thrust, we get;
 
@@ -87,20 +63,16 @@ R_\psi\phi\theta \begin{bmatrix}
     F_1 + F_2 + F_3 + F_4
 \end{bmatrix}
 \]
-\vspace{15pt}
 \\
 
 \textbf{Rotational Dynamics} Applying Euler's rotation equations, we get (in body frame);
-\vspace{10pt}
 
 $M_c = ^AdH_c^B/dt = ^BdH_c^B/dt + ^A\omega^B \times H_c^B$
 
 where, $H_c$ is the angular momentum and $^A\omega^B$ is angular velocity of body B in frame A which is given by $p.b_1 + q.b_2 + r.b_3$
-\vspace{10pt}
 
 General vector form of Euler's equation is;
 $M_c = I\dot{\omega} + \omega \times (I\omega)$
-\vspace{10pt}
 
 For Quadrotor, after rearranging the general vector form;
 \[
@@ -125,10 +97,8 @@ I\begin{bmatrix}
     r
 \end{bmatrix}
 \]
-\vspace{10pt}
 
 Let $\gamma = k_M/k_F$, $M_i = \gamma F_i$, we get;
-\vspace{10pt}
 
 \[
 I\begin{bmatrix}
@@ -158,42 +128,8 @@ I\begin{bmatrix}
     r
 \end{bmatrix}
 \]
-\\
 
-\subsection{Final Joint Equation}
-
-\textbf{Joint Equation} using Linear and Rotational dynamics equations, we get;
-
-\[
-\textbf{u} = \begin{bmatrix}
-    1 & 1 & 1 & 1 \\
-    0 & L & 0 & -L \\
-    -L & 0 & L & 0 \\
-    \gamma & -\gamma & \gamma & -\gamma
-\end{bmatrix}
-\begin{bmatrix}
-    F_1 \\
-    F_2 \\
-    F_3 \\
-    F_4 
-\end{bmatrix}
-\]
-
-where u is;
-\[
-\begin{bmatrix}
-    thrust \\
-    moment\qquad about\qquad x \\
-    moment\qquad about\qquad y \\
-    momemt\qquad about\qquad z 
-\end{bmatrix}
-\]
-\\
-
-\section{Control Inputs}
-
-Control inputs are in the form of motor speeds for controlling thrust and 3 moments.
-\vspace{10pt}
+Final equations using Linear and Rotational dynamics equations, we get;
 
 \[
 \begin{bmatrix}
@@ -215,7 +151,7 @@ Control inputs are in the form of motor speeds for controlling thrust and 3 mome
     \omega_4^2
 \end{bmatrix}
 \]
-\\
+
 \end{document}
 
 %\subsection{State Variables}
