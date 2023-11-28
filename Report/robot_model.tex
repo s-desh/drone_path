@@ -1,0 +1,381 @@
+\documentclass{article}
+
+% Language setting
+% Replace `english' with e.g. `spanish' to change the document language
+\usepackage[english]{babel}
+
+% Set page size and margins
+% Replace `letterpaper' with `a4paper' for UK/EU standard size
+\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{float} 
+\usepackage{subcaption}
+\usepackage{amsmath}
+
+\title{\textbf{Robot Model and Equations of Motion}}
+%\author{Manu Singh}
+
+\begin{document}
+\maketitle
+
+
+\section{Robot Model: Quadrotor}
+
+We have decided to use Quadrotor as our robot. Quadrotor is a type of unmanned aerial vehicle (UAV) or drone that is lifted and propelled by four rotors. Each rotor is mounted at the end of a horizontal arm extending from the central body of the vehicle. 
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.5\linewidth]{image.png}
+\caption{\label{fig:Quadrotor}Quadrotor}
+\end{figure}
+
+
+\section{Working of Quadrotors}
+
+The quadrotor is a highly non-linear, six degree-of-freedom and under-actuated system. It is under-actuated because inputs are only 4 from 4 motors and total degree-of-freedom is 6. It is controlled by varying the thrust forces of each rotor and balancing the drag torque. A quadrotor has two sets of counter-rotating propellers, therefore neutralizing the effective aerodynamic drag. It has four principal modes of operation(Figure 2): 
+\begin{enumerate}
+\item Vertical movement is controlled by simultaneously increasing or decreasing the thrust of all rotors.
+\item Yaw moment is created by proportionally varying the speeds of counter-rotating parts to have movement with respect to quadrotor's z-axis.
+\item Roll can be controlled by applying differential thrust forces on opposite rotors of the quadrotor to have movement with respect to quadrotor's x-axis.
+\item Pitch can be controlled by applying differential thrust forces on opposite rotors of the quadrotor to have movement with respect to quadrotor's y-axis.
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=\linewidth]{vertical.png}
+      \label{fig:enter-label}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=\linewidth]{roll.png}
+      \label{fig:enter-label}
+    \end{subfigure}
+
+    \medskip
+
+    \begin{subfigure}{0.45\textwidth}
+        \includegraphics[width=\linewidth]{pitch.png}
+        \label{fig:enter-label}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.45\textwidth}
+        \includegraphics[width=\linewidth]{yaw.png}
+        \label{fig:enter-label}
+    \end{subfigure}
+\caption{\label{fig:main}Different modes of operation}  
+\end{figure}   
+\\
+
+\section{Quadrotor Model}
+
+
+
+\subsection{Model of a rotor}
+
+Each rotor rotates with angular velocity $\omega$ and generates a lift force F and moment M. Moment is acting opposite to the directing of rotation. (Figure 3)
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{rotor.png}
+    \caption{Quadrotor arm}
+    \label{fig:enter-label}
+\end{figure}
+
+The lift Force F and moment M of ith rotor can be calculated by:
+
+$F_i = k_f * \omega_i^2$ \hspace{1cm} and \hspace{2cm} $k_f = k_T*\rho * D^4$
+
+$M_i = k_m * \omega_i^2$ \hspace{1cm} and \hspace{1.8cm} $k_m = k_Q*\rho * D^5$
+
+\vspace{10pt}
+where:
+
+$k_T$ is thrust coefficient
+
+$k_Q$ is torque 
+
+$rho$ is fluid density
+
+$D$ is diameter of propeller
+\\
+
+\subsection{Equations of Motion}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{variables.png}
+    \caption{Quadrotor in inertial and body frames}
+    \label{fig:enter-label}
+\end{figure}
+
+Total thrust and moment is the sum of individual ones in each of the 4 rotors.
+\vspace{10pt}
+
+Thrust: $F = F_1 + F_2 + F_3 + F_4 - mga_3$
+
+Here, $F_x$ are individual lift forces by the propellers and $m*g$ is the one by gravity.
+\vspace{10pt}
+
+Moment: $M = r_1 * F_1 + r_2 * F_2 + r_3 * F_3 + r_4 * F_4 + M_1 + M_2 + M_3 + M_4$
+
+Here, $r_x*F_x$ are the moments created by forces in quadrotor's centre of gravity and $M_x$ are the individual moments created by the propellers.
+\\
+
+\subsection{State Variables}
+
+$u, \phi, p$ are the linear velocity along the roll-axis direction, angle rotated and the angular velocity about the roll-axis.
+$w, \psi, r$ is the linear velocity along the yaw-axis direction, angle rotated and the angular velocity about the yaw-axis.
+$v, \theta, q$ is the linear velocity along the pitch-axis direction, angle rotated and the angular velocity about the pitch-axis.
+$x, y, z$ are the position of quadrotor along $a_1, a_2, a_3$ axis of the inertial frame.
+\\
+
+
+\subsection{Newton-Euler Equations for Quadrotor}
+
+\textbf{Linear Dynamics} Applying Newton's Second Law for system of particles, we get (in inertial frame);
+
+$F = mass * acceleration$ 
+
+$acceleration (\ddot{r}) = d\dot{r}/dt$, where $\dot{r} = [u,v,w]^T$ (3.3)
+\vspace{10pt}
+
+Since, $w$ is the yaw-axis in which we calculate thrust, we get;
+
+\[
+mass*\ddot{r} = \begin{bmatrix}
+    0 \\
+    0 \\
+    -m*g
+\end{bmatrix} + 
+R_\psi\phi\theta \begin{bmatrix}
+    0 \\
+    0 \\
+    F_1 + F_2 + F_3 + F_4
+\end{bmatrix}
+\]
+\vspace{15pt}
+\\
+
+\textbf{Rotational Dynamics} Applying Euler's rotation equations, we get (in body frame);
+\vspace{10pt}
+
+$M_c = ^AdH_c^B/dt = ^BdH_c^B/dt + ^A\omega^B \times H_c^B$
+
+where, $H_c$ is the angular momentum and $^A\omega^B$ is angular velocity of body B in frame A which is given by $p.b_1 + q.b_2 + r.b_3$
+\vspace{10pt}
+
+General vector form of Euler's equation is;
+$M_c = I\dot{\omega} + \omega \times (I\omega)$
+\vspace{10pt}
+
+For Quadrotor, after rearranging the general vector form;
+\[
+I\begin{bmatrix}
+    \dot{p} \\
+    \dot{q} \\
+    \dot{r}
+\end{bmatrix} = 
+\begin{bmatrix}
+    L(F_2 - F_4) \\
+    L(F_3 - F_1) \\
+    M_1 - M_2 + M_3 - M_4
+\end{bmatrix} - 
+\begin{bmatrix}
+    p \\
+    q \\
+    r
+\end{bmatrix}
+\times I\begin{bmatrix}
+    p \\
+    q \\
+    r
+\end{bmatrix}
+\]
+\vspace{10pt}
+
+Let $\gamma = k_M/k_F$, $M_i = \gamma F_i$, we get;
+\vspace{10pt}
+
+\[
+I\begin{bmatrix}
+    \dot{p} \\
+    \dot{q} \\
+    \dot{r}
+\end{bmatrix} = 
+\begin{bmatrix}
+    0 & L & 0 & -L \\
+    -L & 0 & L & 0 \\
+    \gamma & -\gamma & \gamma & -\gamma
+\end{bmatrix}
+\begin{bmatrix}
+    F_1 \\
+    F_2 \\
+    F_3 \\
+    F_4
+\end{bmatrix}- 
+\begin{bmatrix}
+    p \\
+    q \\
+    r
+\end{bmatrix}
+\times I\begin{bmatrix}
+    p \\
+    q \\
+    r
+\end{bmatrix}
+\]
+\\
+
+\subsection{Final Joint Equation}
+
+\textbf{Joint Equation} using Linear and Rotational dynamics equations, we get;
+
+\[
+\textbf{u} = \begin{bmatrix}
+    1 & 1 & 1 & 1 \\
+    0 & L & 0 & -L \\
+    -L & 0 & L & 0 \\
+    \gamma & -\gamma & \gamma & -\gamma
+\end{bmatrix}
+\begin{bmatrix}
+    F_1 \\
+    F_2 \\
+    F_3 \\
+    F_4 
+\end{bmatrix}
+\]
+
+where u is;
+\[
+\begin{bmatrix}
+    thrust \\
+    moment\qquad about\qquad x \\
+    moment\qquad about\qquad y \\
+    momemt\qquad about\qquad z 
+\end{bmatrix}
+\]
+\\
+
+\section{Control Inputs}
+
+Control inputs are in the form of motor speeds for controlling thrust and 3 moments.
+\vspace{10pt}
+
+\[
+\begin{bmatrix}
+    T \\
+    \tau_1 \\
+    \tau_2 \\
+    \tau_3
+\end{bmatrix} = 
+\begin{bmatrix}
+    k_F & k_F & k_F & k_F \\
+    0 & Lk_F & 0 & -Lk_F \\
+    -Lk_F & 0 & Lk_F & 0 \\
+    k_M & -k_M & k_M & -k_M
+\end{bmatrix}
+\begin{bmatrix}
+    \omega_1^2 \\
+    \omega_2^2 \\
+    \omega_3^2 \\
+    \omega_4^2
+\end{bmatrix}
+\]
+\\
+\end{document}
+
+%\subsection{State Variables}
+
+%$u, \phi, p$ are the linear velocity along the roll-axis direction, angle rotated and the angular velocity about the roll-axis.
+%$w, \psi, r$ is the linear velocity along the yaw-axis direction, angle rotated and the angular velocity about the yaw-axis.
+%$v, \theta, q$ is the linear velocity along the pitch-axis direction, angle rotated and the angular velocity about the pitch-axis.
+%$x, y, z$ are the position of quadrotor along $a_1, a_2, a_3$ axis of the inertial frame. 
+
+%\begin{figure}[H]
+%    \centering
+%    \includegraphics[width=0.5\linewidth]{variables.png}
+%    \caption{Inertial frame a and body frame b}
+%    \label{fig:enter-label}
+%\end{figure}
+
+
+%\subsection{Rotation Matrices}
+
+%We have five coordinate reference frames in total. Namely, Inertial frame, vehicle frame, yaw-adjusted frame, pitch adjusted frame and body frame. Inertial frame is fixed on the ground at a predefined home location ($a_1, a_2, a_3$).Vehicle frame has axes parallel to the inertial frame but has the origin shifted to the quadrotor’s center of gravity. Vehicle frame’s yaw is adjusted to match the quadrotor’s yaw to get the yaw-adjusted frame which is then pitch adjusted to get pitch-adjusted frame. Finally body frame is obtained by adjusting the roll of the pitch adjusted frame. The transformation from the inertial to vehicle frame is just as simple translation. The transformation from vehicle to body frame ($b_1, b_2, b_3$) is given by the following rotation matrix:
+%\vspace{10pt}
+
+%$R_v^b(\phi, \theta, \psi) = R_p^b(\phi)R_y^p(\theta)R_v^y(\psi)$
+
+%\[
+%= \begin{bmatrix}
+%    1 & 0 & 0 \\
+%    0 & $cos\phi$ & $sin\phi$ \\
+%    0 & $-sin\phi$ & $cos\phi$ \\
+%\end{bmatrix}.
+%\begin{bmatrix}
+%    $cos\theta$ & 0 & $-sin\theta$ \\
+%    0 & 1 & 0 \\
+%    $sin\theta$ & 0 & $cos\theta$
+%\end{bmatrix}
+%\begin{bmatrix}
+    
+%\]
+
+%\subsection{Kinematics}
+
+%\subsubsection{Translational Kinematics}
+%The state variables(\(\dot{x}\), \(\dot{y}\), \(\dot{z}\)) are inertial frame parameters whereas, velocities ($u, v, w$) are body frame parameters. They can be related through the transformation matrix as follows:
+
+%\[
+%\begin{bmatrix}
+%  \dot{x} \\
+%  \dot{y} \\
+%  \dot{z}
+%\end{bmatrix} = 
+%(R_v^b)^T \cdot \begin{bmatrix}
+%    $u$ \\
+%    $v$ \\
+%    $w$     
+%\end{bmatrix}
+%\]
+
+%\subsubsection{Rotational Kinematics}
+%Since the yaw(relative to vehicle frame), pitch(relative to yaw-adjusted frame) and roll(relative to pitch-adjusted frame) are measured relative to different coordinate systems, the transformation for each is different. So, the angular velocities (p,q,r) are obtained as follows:
+
+%\[
+%\begin{bmatrix}
+%  p \\
+%  q \\
+% r
+%\end{bmatrix} = 
+%\begin{bmatrix}
+%    \dot{\phi} \\
+%    0 \\
+%    0     
+%\end{bmatrix} + 
+%R_p^b(\phi) \cdot \begin{bmatrix}
+%    0 \\
+%    \dot{\theta} \\
+%    0     
+%\end{bmatrix} +
+%R_p^b(\phi) \cdot R_y^p(\theta) \cdot \begin{bmatrix}
+%    0 \\
+%    0 \\
+%    \dot{\psi}     
+%\end{bmatrix}
+%= \begin{bmatrix}
+%    1 & 0 & -sin\theta \\
+%    0 & cos\theta & sin\phi cos\theta \\
+%    0 & -sin\phi & cos\phi cos\theta
+%\end{bmatrix} 
+%\cdot \begin{bmatrix}
+%    \dot{\phi} \\
+%    \dot{\theta} \\
+%    \dot{\psi}
+%\end{bmatrix}
+%\]
