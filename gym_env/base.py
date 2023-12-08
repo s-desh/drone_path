@@ -6,6 +6,7 @@ from datetime import datetime
 import xml.etree.ElementTree as etxml
 import pkg_resources
 from PIL import Image
+import json
 # import pkgutil
 # egl = pkgutil.get_loader('eglRenderer')
 import numpy as np
@@ -379,6 +380,8 @@ class BaseAviary(gym.Env):
             self.last_clipped_action = clipped_action
         #### Update and store the drones kinematic information #####
         self._updateAndStoreKinematicInformation()
+        #### update location detection ###
+        self._detectObstacles()
         #### Prepare the return values #############################
         obs = self._computeObs()
         reward = self._computeReward()
@@ -1024,6 +1027,7 @@ class BaseAviary(gym.Env):
         #p.loadURDF("assets/cylinder.urdf", [2, 2, 2]
             #,physicsClientId=self.CLIENT
             #)
+        random.seed(10)
 
         for _ in range(self.num_cylinders):
             while True:
@@ -1044,7 +1048,40 @@ class BaseAviary(gym.Env):
                        p.getQuaternionFromEuler([0, 0, 0]),
                        physicsClientId=self.CLIENT
                        ))
+            
+            # use object ids in p.getBasePositionAndOrientation 
+            obs_map = {
+                "hidden": self.cylinder_object_ids,
+                "detected":[]
+            }
 
+            with open('map.json','w') as f:
+                json.dump(obs_map, f)
+            
+
+    def _detectObstacles(self):
+
+        # obstacle detection based on current postion of drones, runs after every step
+        thresh = 1.5
+
+        with open('map.json','r') as f:
+            obs_map = json.load(f)
+
+        for obsid in obs_map["hidden"]:
+            pos, orient = p.getBasePositionAndOrientation(obsid, physicsClientId=self.CLIENT)
+            for drone in range(self.NUM_DRONES):
+                # dist b/w drone and obs
+                dist = np.sqrt(np.sum(np.square(self.pos[drone,:] - pos)))
+                if (dist < thresh) and (obsid not in obs_map["detected"]):
+                    obs_map["detected"].append(obsid)
+                    # one drone can only be close to one cylinder below the thresh
+                    continue
+        
+        with open('map.json','w') as f:
+            json.dump(obs_map, f)
+
+        # generate code to save obs_map in a pickle file
+        
 
     ################################################################################
 

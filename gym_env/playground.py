@@ -131,7 +131,7 @@ def run(
     action = np.zeros((num_drones,4))
     START = time.time()
     for i in range(0, int(duration_sec*env.CTRL_FREQ)):
-        print(i)
+        # print(i)
         obs, reward, terminated, truncated, info = env.step(action)
         
     #### Close the environment #################################
