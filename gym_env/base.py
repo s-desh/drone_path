@@ -14,6 +14,7 @@ import pybullet_data
 import gymnasium as gym
 from enums import DroneModel, Physics, ImageType
 import random
+import cv2 as cv
 
 class BaseAviary(gym.Env):
     """Base class for "drone aviary" Gym environments."""
@@ -76,6 +77,8 @@ class BaseAviary(gym.Env):
         self.num_cylinders = num_cylinders
         self.area_size = area_size
         self.cylinder_object_ids = []  # Required to track the position of cylinders.
+        self.resolution = 100  # 1 meter equals 100 pixels on map
+        self.world_map = np.zeros((area_size*self.resolution, area_size*self.resolution), dtype=np.uint8)  # Track obstacles. 0 -> Free space; 1 -> obstacle
         #### Constants #############################################
         self.G = 9.8
         self.RAD2DEG = 180/np.pi
@@ -995,6 +998,9 @@ class BaseAviary(gym.Env):
 
         return collision
 
+    def meter_to_world_map(self, value):
+        return int((value + self.area_size/2)*self.resolution)
+
 
     def _addObstacles(self):
         """Add obstacles to the environment.
@@ -1044,6 +1050,8 @@ class BaseAviary(gym.Env):
                        p.getQuaternionFromEuler([0, 0, 0]),
                        physicsClientId=self.CLIENT
                        ))
+            cv.circle(self.world_map, (self.meter_to_world_map(x_cyl), self.meter_to_world_map(y_cyl)), int(radius_cyl*self.resolution), 255, -1)
+        return
 
 
     ################################################################################
