@@ -6,14 +6,17 @@ from datetime import datetime
 import xml.etree.ElementTree as etxml
 import pkg_resources
 from PIL import Image
+import json
 # import pkgutil
 # egl = pkgutil.get_loader('eglRenderer')
 import numpy as np
 import pybullet as p
+import cv2 as cv
 import pybullet_data
 import gymnasium as gym
 from enums import DroneModel, Physics, ImageType
 import random
+import pickle
 
 class BaseAviary(gym.Env):
     """Base class for "drone aviary" Gym environments."""
@@ -76,6 +79,12 @@ class BaseAviary(gym.Env):
         self.num_cylinders = num_cylinders
         self.area_size = area_size
         self.cylinder_object_ids = []  # Required to track the position of cylinders.
+        self.detected_object_ids = []
+        self.resolution = 100
+        self.world_map = np.zeros((area_size*self.resolution, area_size*self.resolution), dtype=np.uint8)  # Track obstacles. 0 -> Free space; 1 -> obstacle
+        self.radius_cyl = 0.5
+        self.height_cyl = 2.0
+        self.obstacle_detect_threshold = 10
         #### Constants #############################################
         self.G = 9.8
         self.RAD2DEG = 180/np.pi
@@ -379,6 +388,8 @@ class BaseAviary(gym.Env):
             self.last_clipped_action = clipped_action
         #### Update and store the drones kinematic information #####
         self._updateAndStoreKinematicInformation()
+        #### update location detection ###
+        self._detectObstacles()
         #### Prepare the return values #############################
         obs = self._computeObs()
         reward = self._computeReward()
@@ -1024,6 +1035,7 @@ class BaseAviary(gym.Env):
         #p.loadURDF("assets/cylinder.urdf", [2, 2, 2]
             #,physicsClientId=self.CLIENT
             #)
+        random.seed(10)
 
         for _ in range(self.num_cylinders):
             while True:
@@ -1044,10 +1056,17 @@ class BaseAviary(gym.Env):
                        p.getQuaternionFromEuler([0, 0, 0]),
                        physicsClientId=self.CLIENT
                        ))
+            
+    
+    def _detectObstacles(self):
+        raise NotImplementedError
 
 
     ################################################################################
-
+    
+    def meter_to_world_map(self, value):
+        return int((value + self.area_size/2)*self.resolution)
+    
     def _parseURDFParameters(self):
         """Loads parameters from an URDF file.
 

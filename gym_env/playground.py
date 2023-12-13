@@ -28,7 +28,7 @@ import pybullet as p
 import matplotlib.pyplot as plt
 
 from enums import DroneModel, Physics
-from controlenv import CtrlAviary
+from dronesim import DroneSim
 # from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 # from gym_pybullet_drones.utils.Logger import Logger
 # from gym_pybullet_drones.utils.utils import sync, str2bool
@@ -99,7 +99,7 @@ def run(
     # wp_counters = np.array([0 for i in range(num_drones)])
 
     #### Create the environment ################################
-    env = CtrlAviary(drone_model=drone,
+    env = DroneSim(drone_model=drone,
                         num_drones=num_drones,
                         initial_xyzs=INIT_XYZS,
                         initial_rpys=INIT_RPYS,
@@ -131,7 +131,7 @@ def run(
     action = np.zeros((num_drones,4))
     START = time.time()
     for i in range(0, int(duration_sec*env.CTRL_FREQ)):
-        print(i)
+        # print(i)
         obs, reward, terminated, truncated, info = env.step(action)
         
     #### Close the environment #################################

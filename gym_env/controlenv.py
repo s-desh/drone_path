@@ -1,5 +1,10 @@
 import numpy as np
 from gymnasium import spaces
+import pybullet as p
+import cv2 as cv
+from PIL import Image
+from enums import DroneModel, Physics, ImageType
+import random
 
 from base import BaseAviary
 from enums import DroneModel, Physics
@@ -66,7 +71,7 @@ class CtrlAviary(BaseAviary):
                          record=record,
                          obstacles=obstacles,
                          user_debug_gui=user_debug_gui,
-                         output_folder=output_folder
+                         output_folder=output_folder,
                          )
 
     ################################################################################
@@ -137,9 +142,7 @@ class CtrlAviary(BaseAviary):
             commanded to the 4 motors of each drone.
 
         """
-        return np.array([np.clip(action[i, :], 0, self.MAX_RPM) for i in range(self.NUM_DRONES)])
-
-    ################################################################################
+        return np.array([np.clip(action[i, :], 0, self.MAX_RPM) for i in range(self.NUM_DRONES)])    
 
     def _computeReward(self):
         """Computes the current reward value(s).
