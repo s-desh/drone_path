@@ -27,7 +27,9 @@ class CtrlAviary(BaseAviary):
                  record=False,
                  obstacles=False,
                  user_debug_gui=True,
-                 output_folder='results'
+                 output_folder='results',
+                num_cylinders=10,  # Control number of cylinders to be made,
+                area_size=5,  
                  ):
         """Initialization of an aviary environment for control applications.
 
@@ -71,9 +73,9 @@ class CtrlAviary(BaseAviary):
                          record=record,
                          obstacles=obstacles,
                          user_debug_gui=user_debug_gui,
-                         output_folder=output_folder
+                         output_folder=output_folder,
                          )
-        
+
     ################################################################################
 
     def _actionSpace(self):
@@ -201,3 +203,30 @@ class CtrlAviary(BaseAviary):
 
         """
         return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
+
+    def _detectObstacles(self):
+        # obstacle detection based on current postion of drones, runs after every step
+        thresh = 100
+
+        # print(self.cylinder_object_ids)
+
+        for obsid in self.cylinder_object_ids:
+            pos, orient = p.getBasePositionAndOrientation(obsid, physicsClientId=self.CLIENT)
+            x, y, z = pos
+
+            for drone in range(self.NUM_DRONES):
+                # dist b/w drone and obs
+                dist = np.sqrt(np.sum(np.square(self.pos[drone,:] - pos)))
+
+                if (dist < thresh) and (obsid not in self.detected_object_ids):
+                    self.detected_object_ids.append(obsid)
+                    cv.circle(self.world_map, (self.meter_to_world_map(x), self.meter_to_world_map(y)), int(self.radius_cyl*self.resolution), 255, -1)
+                    # one drone can only be close to one cylinder below the thresh
+                    continue
+                
+        cv.imshow("occupancy",self.world_map)
+
+        key = cv.waitKey(100)
+        if key == ord('q'):
+            cv.destroyAllWindows()
+    

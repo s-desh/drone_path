@@ -1061,28 +1061,10 @@ class BaseAviary(gym.Env):
         return int((value + self.area_size/2)*self.resolution)
 
     def _detectObstacles(self):
-        # obstacle detection based on current postion of drones, runs after every step
-        thresh = 100
 
-        # print(self.cylinder_object_ids)
+        raise NotImplementedError
 
-        for obsid in self.cylinder_object_ids:
-            pos, orient = p.getBasePositionAndOrientation(obsid, physicsClientId=self.CLIENT)
-            x, y, z = pos
 
-            for drone in range(self.NUM_DRONES):
-                # dist b/w drone and obs
-                dist = np.sqrt(np.sum(np.square(self.pos[drone,:] - pos)))
-
-                if (dist < thresh) and (obsid not in self.detected_object_ids):
-                    self.detected_object_ids.append(obsid)
-                    cv.circle(self.world_map, (self.meter_to_world_map(x), self.meter_to_world_map(y)), int(self.radius_cyl*self.resolution), 255, -1)
-                    # one drone can only be close to one cylinder below the thresh
-                    continue
-                
-        cv.imshow("occupancy",self.world_map)
-
-        key = cv.waitKey(100)
         # generate code to save obs_map in a pickle file
 
     ################################################################################
