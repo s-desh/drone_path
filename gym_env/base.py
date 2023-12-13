@@ -84,6 +84,7 @@ class BaseAviary(gym.Env):
         self.world_map = np.zeros((area_size*self.resolution, area_size*self.resolution), dtype=np.uint8)  # Track obstacles. 0 -> Free space; 1 -> obstacle
         self.radius_cyl = 0.5
         self.height_cyl = 2.0
+        self.obstacle_detect_threshold = 10
         #### Constants #############################################
         self.G = 9.8
         self.RAD2DEG = 180/np.pi
@@ -1057,15 +1058,9 @@ class BaseAviary(gym.Env):
                        ))
             
     
-    def meter_to_world_map(self, value):
-        return int((value + self.area_size/2)*self.resolution)
-
     def _detectObstacles(self):
-
         raise NotImplementedError
 
-
-        # generate code to save obs_map in a pickle file
 
     ################################################################################
     
