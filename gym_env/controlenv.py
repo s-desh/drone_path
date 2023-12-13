@@ -8,7 +8,8 @@ import random
 
 from base import BaseAviary
 from enums import DroneModel, Physics
-
+import cv2 as cv
+from RRT import *
 class CtrlAviary(BaseAviary):
     """Multi-drone environment class for control applications."""
 
@@ -73,6 +74,15 @@ class CtrlAviary(BaseAviary):
                          user_debug_gui=user_debug_gui,
                          output_folder=output_folder,
                          )
+        self.drone_size = (.06*1.15, .025)  # in meters. Represented as a cylinder (radius * additional space and height)
+        self.drone_obs_matrix = np.zeros((int(self.drone_size[0]*2*self.resolution), int(self.drone_size[0]*2*self.resolution)), dtype=np.uint8)
+        cv.circle(self.drone_obs_matrix,
+                  (int(self.drone_size[0]*self.resolution), int(self.drone_size[0]*self.resolution)),
+                  int(self.drone_size[0]*self.resolution), 255, -1)
+
+        self.occ_map = create_occ_map(self.world_map, self.drone_obs_matrix)
+        out = test_occ_map(self.occ_map, self.world_map)
+        return
 
     ################################################################################
 
@@ -201,3 +211,16 @@ class CtrlAviary(BaseAviary):
 
         """
         return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
+
+    def check_collision(self, posn: (int, int)):
+        # The posn is always given in world_map coordinates
+        check_shape = self.drone_obs_matrix.shape
+        obstacle_array = self.world_map[posn[0] - check_shape[0]/2: posn[0] + check_shape[0]/2,
+                                        posn[1] - check_shape[1]/2: posn[1] + check_shape[1]/2]
+        collision_1 = np.multiply(self.drone_obs_matrix, obstacle_array)
+        collision_2 = np.sum(collision_1)
+        return True if collision_2 > 0 else False
+
+    def get_RRT_path(self, start, end):
+
+        return
