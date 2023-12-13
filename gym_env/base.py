@@ -11,10 +11,12 @@ import json
 # egl = pkgutil.get_loader('eglRenderer')
 import numpy as np
 import pybullet as p
+import cv2 as cv
 import pybullet_data
 import gymnasium as gym
 from enums import DroneModel, Physics, ImageType
 import random
+import pickle
 
 class BaseAviary(gym.Env):
     """Base class for "drone aviary" Gym environments."""
@@ -77,6 +79,11 @@ class BaseAviary(gym.Env):
         self.num_cylinders = num_cylinders
         self.area_size = area_size
         self.cylinder_object_ids = []  # Required to track the position of cylinders.
+        self.detected_object_ids = []
+        self.resolution = 100
+        self.world_map = np.zeros((area_size*self.resolution, area_size*self.resolution), dtype=np.uint8)  # Track obstacles. 0 -> Free space; 1 -> obstacle
+        self.radius_cyl = 0.5
+        self.height_cyl = 2.0
         #### Constants #############################################
         self.G = 9.8
         self.RAD2DEG = 180/np.pi
@@ -1049,42 +1056,40 @@ class BaseAviary(gym.Env):
                        physicsClientId=self.CLIENT
                        ))
             
-            # use object ids in p.getBasePositionAndOrientation 
-            obs_map = {
-                "hidden": self.cylinder_object_ids,
-                "detected":[]
-            }
-
-            with open('map.json','w') as f:
-                json.dump(obs_map, f)
-            
+    
+    def meter_to_world_map(self, value):
+        return int((value + self.area_size/2)*self.resolution)
 
     def _detectObstacles(self):
-
         # obstacle detection based on current postion of drones, runs after every step
-        thresh = 1.5
+        thresh = 100
 
-        with open('map.json','r') as f:
-            obs_map = json.load(f)
+        # print(self.cylinder_object_ids)
 
-        for obsid in obs_map["hidden"]:
+        for obsid in self.cylinder_object_ids:
             pos, orient = p.getBasePositionAndOrientation(obsid, physicsClientId=self.CLIENT)
+            x, y, z = pos
+
             for drone in range(self.NUM_DRONES):
                 # dist b/w drone and obs
                 dist = np.sqrt(np.sum(np.square(self.pos[drone,:] - pos)))
-                if (dist < thresh) and (obsid not in obs_map["detected"]):
-                    obs_map["detected"].append(obsid)
+
+                if (dist < thresh) and (obsid not in self.detected_object_ids):
+                    self.detected_object_ids.append(obsid)
+                    cv.circle(self.world_map, (self.meter_to_world_map(x), self.meter_to_world_map(y)), int(self.radius_cyl*self.resolution), 255, -1)
                     # one drone can only be close to one cylinder below the thresh
                     continue
-        
-        with open('map.json','w') as f:
-            json.dump(obs_map, f)
+                
+        cv.imshow("occupancy",self.world_map)
 
+        key = cv.waitKey(100)
         # generate code to save obs_map in a pickle file
-        
 
     ################################################################################
-
+    
+    def meter_to_world_map(self, value):
+        return int((value + self.area_size/2)*self.resolution)
+    
     def _parseURDFParameters(self):
         """Loads parameters from an URDF file.
 
