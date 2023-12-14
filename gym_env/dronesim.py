@@ -7,7 +7,8 @@ import cv2 as cv
 from PIL import Image
 from enums import DroneModel, Physics, ImageType
 import random
-
+import cv2 as cv
+from RRT import *
 from controlenv import CtrlAviary
 from enums import DroneModel, Physics
 
@@ -75,8 +76,18 @@ class DroneSim(CtrlAviary):
                          user_debug_gui=user_debug_gui,
                          output_folder=output_folder,
                          )
+        self.drone_size = (.06*1.15, .025)  # in meters. Represented as a cylinder (radius * additional space and height)
+        self.drone_obs_matrix = np.zeros((int(self.drone_size[0]*2*self.resolution), int(self.drone_size[0]*2*self.resolution)), dtype=np.uint8)
+        cv.circle(self.drone_obs_matrix,
+                  (int(self.drone_size[0]*self.resolution), int(self.drone_size[0]*self.resolution)),
+                  int(self.drone_size[0]*self.resolution), 255, -1)
 
-    
+        self.occ_map = create_occ_map(self.world_map, self.drone_obs_matrix)
+        out = test_occ_map(self.occ_map, self.world_map)
+        np.save("Test/occ_map.npy", self.occ_map)
+        np.save("Test/world_map.npy", self.world_map)
+        np.save("Test/drone_obs_matrix.npy", self.drone_obs_matrix)
+
 
     def meter_to_world_map(self, value):
         return int((value + self.area_size/2)*self.resolution)
@@ -100,10 +111,9 @@ class DroneSim(CtrlAviary):
                     cv.circle(self.world_map, (self.meter_to_world_map(x), self.meter_to_world_map(y)), int(self.radius_cyl*self.resolution), 255, -1)
                     # one drone can only be close to one cylinder below the thresh
                     continue
-                
+
         cv.imshow("occupancy",self.world_map)
 
         key = cv.waitKey(100)
         if key == ord('q'):
             cv.destroyAllWindows()
-    
