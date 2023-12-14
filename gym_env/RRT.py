@@ -124,14 +124,14 @@ class RRTStar:
             shape = self.occ_map.shape
             for dim in shape:
                 ind.append(np.random.randint(0, dim))
-            if self.occ_map[ind[0], ind[1]] == 0:
+            if self.occ_map[ind[1], ind[0]] == 0:
                 return np.array(ind)
 
     def line_collision(self, line: np.ndarray):
         # Check if the edge passes through an obstacle. Line is represented by a set of integer indices.
         # Returns True if their is collision
         assert line.dtype == int, "line is a list of indices and must be of type integers"
-        coll = np.sum(self.occ_map[line[:, 0], line[:, 1]])
+        coll = np.sum(self.occ_map[line[:, 1], line[:, 0]])
         return False if coll == 0 else True
 
     def nearest_node(self, new_node):
@@ -150,7 +150,7 @@ class RRTStar:
         prev_posn = nearest.posn
         line, _ = self.line_btw_nodes(nearest, new)
         for new_posn in line:
-            if self.occ_map[new_posn[0], new_posn[1]] != 0:
+            if self.occ_map[new_posn[1], new_posn[0]] != 0:
                 return prev_posn
             elif nearest.dist(new_posn) > self.radius:
                 return prev_posn
@@ -168,12 +168,18 @@ class RRTStar:
         new_node.cost = min_node.cost + (new_node - min_node)
         return new_node
 
-    def connect_goal(self):
+    def connect_goal(self, i):
         x_nearest = self.nearest_node(self.goal)
         dist = x_nearest - self.goal
+        print("Iteration:", i)
         if dist <= self.radius:
             self.add_node(self.goal)
             self.add_edge(x_nearest, self.goal)
+            self.path_found = True
+            print("Path found")
+        else:
+            print("Path not found yet ...")
+        return
 
     def plot_graph(self, _graph=None):
         node_radius = 1  # pixel == cm
@@ -196,12 +202,18 @@ class RRTStar:
 
         # Path Found
         if self.path_found:
+            iter_i = 0
+            max_i = len(nodes_list)
             node = self.goal
             while node is not self.start:
                 par_node = node.parent_node
                 cv.circle(out_img, node.posn, node_radius, color=(0, 0, 255))
                 cv.arrowedLine(out_img, par_node.posn, node.posn, color=(0, 0, 255), thickness=line_thickness)
-
+                node = par_node
+                iter_i += 1
+                if iter_i > max_i:
+                    print("Linking error")
+                    break
         return out_img
 
     def find_path(self):
@@ -228,8 +240,26 @@ class RRTStar:
                     if (not collision) and (new_cost < x_near.cost):
                         self.replace_edge(x_near.parent_node, x_near, x_new)
 
-            if i // 100 == 0 and not self.path_found:
-                self.connect_goal()
+            if i % 100 == 0 and not self.path_found:
+                self.connect_goal(i)
+
+    def get_final_path(self):
+        if self.path_found:
+            out_list = []
+            all_nodes_dict = nx.get_node_attributes(self.graph, 'item')
+            iter_i = 0
+            max_i = len(all_nodes_dict)
+            node = self.goal
+            while node is not self.start:
+                out_list.append(node.posn)
+                node = node.parent_node
+                iter_i += 1
+                if iter_i > max_i:
+                    print("Linking Erro")
+                    return None
+            return np.array(out_list)
+        else:
+            return None
 
 
 def test_RRT_start():
@@ -237,8 +267,11 @@ def test_RRT_start():
     world_map = np.load("Test/world_map.npy")
     drone_obs_matrix = np.load("Test/drone_obs_matrix.npy")
     occ_map = np.load("Test/occ_map.npy")
-    rrt = RRTStar(occ_map, np.array([20, 450]), np.array([450, 20]), 7, 2500, True)
+    rrt = RRTStar(occ_map, np.array([20, 450]), np.array([450, 20]), 20, 5000, True)
     out_img = rrt.plot_graph()
+    nearest_goal = rrt.nearest_node(rrt.goal)
+    on_obst = rrt.nearest_node(Node(np.array([200, 140]), -1))
+    is_obst = rrt.occ_map[on_obst.posn[0], on_obst.posn[1]] != 0
     print("Test complete. Exiting....")
     return
 
