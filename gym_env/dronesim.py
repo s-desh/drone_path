@@ -1,5 +1,3 @@
-
-
 import numpy as np
 from gymnasium import spaces
 import pybullet as p
@@ -12,25 +10,28 @@ from RRT import *
 from controlenv import CtrlAviary
 from enums import DroneModel, Physics
 
+
 class DroneSim(CtrlAviary):
     """Multi-drone environment class for control applications."""
 
     ################################################################################
 
     def __init__(self,
-                 drone_model: DroneModel=DroneModel.CF2X,
-                 num_drones: int=1,
-                 neighbourhood_radius: float=np.inf,
+                 drone_model: DroneModel = DroneModel.CF2X,
+                 num_drones: int = 1,
+                 neighbourhood_radius: float = np.inf,
                  initial_xyzs=None,
                  initial_rpys=None,
-                 physics: Physics=Physics.PYB,
+                 physics: Physics = Physics.PYB,
                  pyb_freq: int = 240,
                  ctrl_freq: int = 240,
                  gui=False,
                  record=False,
                  obstacles=False,
                  user_debug_gui=True,
-                 output_folder='results'
+                 output_folder='results',
+                 num_cylinders=10,  # Control number of cylinders to be made,
+                 area_size=5,  # Area of the environment for our use case.
                  ):
         """Initialization of an aviary environment for control applications.
 
@@ -62,6 +63,14 @@ class DroneSim(CtrlAviary):
             Whether to draw the drones' axes and the GUI RPMs sliders.
 
         """
+        #### PDM Additions ###################
+        self.num_cylinders = num_cylinders
+        self.area_size = area_size
+        self.cylinder_object_ids = []  # Required to track the position of cylinders.
+        self.resolution = 100  # 1 meter equals 100 pixels on map
+        self.world_map = np.zeros((area_size * self.resolution, area_size * self.resolution),
+                                  dtype=np.uint8)  # Track obstacles. 0 -> Free space; 1 -> obstacle
+
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
                          neighbourhood_radius=neighbourhood_radius,
@@ -76,21 +85,19 @@ class DroneSim(CtrlAviary):
                          user_debug_gui=user_debug_gui,
                          output_folder=output_folder,
                          )
-        self.drone_size = (.06*1.15, .025)  # in meters. Represented as a cylinder (radius * additional space and height)
-        self.drone_obs_matrix = np.zeros((int(self.drone_size[0]*2*self.resolution), int(self.drone_size[0]*2*self.resolution)), dtype=np.uint8)
+        self.drone_size = \
+            (.06 * 1.15, .025)  # in meters. Represented as a cylinder (radius * additional space and height)
+        self.drone_obs_matrix = np.zeros(
+            (int(self.drone_size[0] * 2 * self.resolution), int(self.drone_size[0] * 2 * self.resolution)),
+            dtype=np.uint8)
         cv.circle(self.drone_obs_matrix,
-                  (int(self.drone_size[0]*self.resolution), int(self.drone_size[0]*self.resolution)),
-                  int(self.drone_size[0]*self.resolution), 255, -1)
+                  (int(self.drone_size[0] * self.resolution), int(self.drone_size[0] * self.resolution)),
+                  int(self.drone_size[0] * self.resolution), 255, -1)
 
         self.occ_map = create_occ_map(self.world_map, self.drone_obs_matrix)
-        out = test_occ_map(self.occ_map, self.world_map)
-        np.save("Test/occ_map.npy", self.occ_map)
-        np.save("Test/world_map.npy", self.world_map)
-        np.save("Test/drone_obs_matrix.npy", self.drone_obs_matrix)
-
 
     def meter_to_world_map(self, value):
-        return int((value + self.area_size/2)*self.resolution)
+        return int((value + self.area_size / 2) * self.resolution)
 
     def _detectObstacles(self):
         # obstacle detection based on current postion of drones, runs after every step
@@ -104,16 +111,62 @@ class DroneSim(CtrlAviary):
 
             for drone in range(self.NUM_DRONES):
                 # dist b/w drone and obs
-                dist = np.sqrt(np.sum(np.square(self.pos[drone,:] - pos)))
+                dist = np.sqrt(np.sum(np.square(self.pos[drone, :] - pos)))
 
                 if (dist < thresh) and (obsid not in self.detected_object_ids):
                     self.detected_object_ids.append(obsid)
-                    cv.circle(self.world_map, (self.meter_to_world_map(x), self.meter_to_world_map(y)), int(self.radius_cyl*self.resolution), 255, -1)
+                    cv.circle(self.world_map, (self.meter_to_world_map(x), self.meter_to_world_map(y)),
+                              int(self.radius_cyl * self.resolution), 255, -1)
                     # one drone can only be close to one cylinder below the thresh
                     continue
 
-        cv.imshow("occupancy",self.world_map)
+        cv.imshow("occupancy", self.world_map)
 
         key = cv.waitKey(100)
         if key == ord('q'):
             cv.destroyAllWindows()
+
+    def check_collision_before_spawn(self, x, y, z, radius, height):
+        # Check for collisions with existing cylinders
+        collision = False
+        for i in range(p.getNumBodies(physicsClientId=self.CLIENT)):
+            body_info = p.getBodyInfo(i, physicsClientId=self.CLIENT)
+            if body_info[0].decode('UTF-8') == "cylinder":
+                # Get the position of the existing cylinder
+                pos, _ = p.getBasePositionAndOrientation(i, physicsClientId=self.CLIENT)
+                # Check if there is a collision with the existing cylinder
+                distance = ((pos[0] - x) ** 2 + (pos[1] - y) ** 2 + (pos[2] - z) ** 2) ** 0.5
+                if distance < (radius + 1.0):  # Adjust the collision distance based on your requirements
+                    collision = True
+                    break
+
+        return collision
+
+    def _addObstacles(self):
+        """Add obstacles to the environment.
+
+        These obstacles are loaded from standard URDF files included in Bullet.
+
+        """
+        for _ in range(self.num_cylinders):
+            while True:
+                # Random position within the area
+                x_cyl = random.uniform(-self.area_size / 2, self.area_size / 2)
+                y_cyl = random.uniform(-self.area_size / 2, self.area_size / 2)
+                z_cyl = 2  # Assuming the ground is at z=0
+                radius_cyl = 0.5
+                height_cyl = 2.0
+
+                # Check for collisions before spawning
+                if not self.check_collision_before_spawn(x_cyl, y_cyl, z_cyl, radius_cyl, height_cyl):
+                    break
+
+            # Spawn the cylinder at the random position
+            self.cylinder_object_ids.append(p.loadURDF("assets/cylinder.urdf",
+                                                       [x_cyl, y_cyl, z_cyl],
+                                                       p.getQuaternionFromEuler([0, 0, 0]),
+                                                       physicsClientId=self.CLIENT
+                                                       ))
+            cv.circle(self.world_map, (self.meter_to_world_map(x_cyl), self.meter_to_world_map(y_cyl)),
+                      int(radius_cyl * self.resolution), 255, -1)
+        return
