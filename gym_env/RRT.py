@@ -27,8 +27,8 @@ def test_occ_map(occ_map, world_map):
     out = np.zeros((list(occ_map.shape) + [3]))
     out[:, :, 0] = occ_map
     out[:, :, 1] = world_map
-    np.save("Test/occ_map.npy", occ_map)
-    np.save("Test/world_map.npy", world_map)
+    np.save("data/occ_map.npy", occ_map)
+    np.save("data/world_map.npy", world_map)
     return out
 
 

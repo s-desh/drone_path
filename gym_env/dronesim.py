@@ -70,7 +70,10 @@ class DroneSim(CtrlAviary):
         self.resolution = 100  # 1 meter equals 100 pixels on map
         self.world_map = np.zeros((area_size * self.resolution, area_size * self.resolution),
                                   dtype=np.uint8)  # Track obstacles. 0 -> Free space; 1 -> obstacle
-
+        self.detected_object_ids = []
+        self.radius_cyl = 0.5
+        self.height_cyl = 2.0
+        self.obstacle_detect_threshold = 3
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
                          neighbourhood_radius=neighbourhood_radius,
@@ -95,7 +98,7 @@ class DroneSim(CtrlAviary):
                   int(self.drone_size[0] * self.resolution), 255, -1)
 
         self.occ_map = create_occ_map(self.world_map, self.drone_obs_matrix)
-        out = test_occ_map(self.occ_map, self.world_map)
+        # out = test_occ_map(self.occ_map, self.world_map)
         np.save("data/occ_map.npy", self.occ_map)
         np.save("data/world_map.npy", self.world_map)
         np.save("data/drone_obs_matrix.npy", self.drone_obs_matrix)
