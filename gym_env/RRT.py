@@ -27,6 +27,8 @@ def test_occ_map(occ_map, world_map):
     out = np.zeros((list(occ_map.shape) + [3]))
     out[:, :, 0] = occ_map
     out[:, :, 1] = world_map
+    np.save("data/occ_map.npy", occ_map)
+    np.save("data/world_map.npy", world_map)
     return out
 
 
@@ -82,7 +84,8 @@ class RRTStar:
                  goal: np.ndarray,  # Goal config
                  radius: float,  # Radius for finding close configurations
                  max_iter,  # Max iterations for RRT*
-                 verbosity=True  # Show progress and other information
+                 verbosity=True,  # Show progress and other information
+                 drone_id=0
                  ):
         self.occ_map = occ_map
 
@@ -95,8 +98,11 @@ class RRTStar:
         self.radius = radius
         self.max_iter = max_iter
         self.verbosity = verbosity
+        self.drone_id = drone_id
         self.path_found = False
-        self.find_path()
+
+    def print(self, val):
+        print("Drone ", self.drone_id, ": ", val)
 
     @staticmethod
     def distance_func(n1, n2):
@@ -171,14 +177,14 @@ class RRTStar:
     def connect_goal(self, i):
         x_nearest = self.nearest_node(self.goal)
         dist = x_nearest - self.goal
-        print("Iteration:", i)
+        self.print("Iteration:", i)
         if dist <= self.radius:
             self.add_node(self.goal)
             self.add_edge(x_nearest, self.goal)
             self.path_found = True
-            print("Path found")
+            self.print("Path found")
         else:
-            print("Path not found yet ...")
+            self.print("Path not found yet ...")
         return
 
     def plot_graph(self, _graph=None):
@@ -212,9 +218,33 @@ class RRTStar:
                 node = par_node
                 iter_i += 1
                 if iter_i > max_i:
-                    print("Linking error")
+                    self.print("Linking error")
                     break
         return out_img
+
+    def check_path(self, fix_path=True):
+        # Check is path still valid and return True, else False
+        path = self.get_final_path(False)
+        if path:
+            for i in range(len(path) - 1):
+                _, coll = self.line_btw_nodes(path[i], path[i - 1])
+                if coll:
+                    self.print("Path broken by new obstacles")
+                    return False, None
+            return True, path
+        else:
+            return False
+
+    def control_drone(self, posn):
+        if self.path_found:
+            valid, path = self.check_path()
+            if valid:
+                posn_node = Node(posn, 0)
+                dist = path - posn_node
+                close_nodes = np.argwhere(dist < self.radius)
+                closest_node_arg = np.max(close_nodes)
+                return path[closest_node_arg].posn
+        return None
 
     def find_path(self):
         for i in tqdm(range(self.max_iter), disable=not self.verbosity):
@@ -240,10 +270,17 @@ class RRTStar:
                     if (not collision) and (new_cost < x_near.cost):
                         self.replace_edge(x_near.parent_node, x_near, x_new)
 
-            if i % 100 == 0 and not self.path_found:
-                self.connect_goal(i)
+                if i % 100 == 0 and not self.path_found:
+                    self.connect_goal(i)
+                    if self.path_found:
+                        return self.get_final_path()
+        assert True, self.print("Path not found")
+        return None
 
-    def get_final_path(self):
+    def fix_path(self, child, parent):
+        pass
+
+    def get_final_path(self, ret_posn=True):
         if self.path_found:
             out_list = []
             all_nodes_dict = nx.get_node_attributes(self.graph, 'item')
@@ -251,13 +288,16 @@ class RRTStar:
             max_i = len(all_nodes_dict)
             node = self.goal
             while node is not self.start:
-                out_list.append(node.posn)
+                if ret_posn:
+                    out_list.append(node.posn)
+                else:
+                    out_list.append(node)
                 node = node.parent_node
                 iter_i += 1
                 if iter_i > max_i:
-                    print("Linking Erro")
+                    self.print("Linking Error")
                     return None
-            return np.array(out_list)
+            return np.array(out_list[::-1])
         else:
             return None
 
@@ -267,11 +307,12 @@ def test_RRT_start():
     world_map = np.load("Test/world_map.npy")
     drone_obs_matrix = np.load("Test/drone_obs_matrix.npy")
     occ_map = np.load("Test/occ_map.npy")
-    rrt = RRTStar(occ_map, np.array([20, 450]), np.array([450, 20]), 20, 5000, True)
+    rrt = RRTStar(occ_map, np.array([15, 212]), np.array([440, 440]), 20, 5000, True)
     out_img = rrt.plot_graph()
     nearest_goal = rrt.nearest_node(rrt.goal)
     on_obst = rrt.nearest_node(Node(np.array([200, 140]), -1))
     is_obst = rrt.occ_map[on_obst.posn[0], on_obst.posn[1]] != 0
+    path = rrt.get_final_path()
     print("Test complete. Exiting....")
     return
 

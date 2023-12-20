@@ -37,9 +37,7 @@ class BaseAviary(gym.Env):
                  obstacles=False,
                  user_debug_gui=True,
                  vision_attributes=False,
-                 output_folder='results',
-                 num_cylinders=10,  # Control number of cylinders to be made,
-                 area_size=5,  # Area of the environment for our use case.
+                 output_folder='results'
                  ):
         """Initialization of a generic aviary environment.
 
@@ -73,16 +71,6 @@ class BaseAviary(gym.Env):
             Whether to allocate the attributes needed by vision-based aviary subclasses.
 
         """
-        #### PDM Additions ###################
-        self.num_cylinders = num_cylinders
-        self.area_size = area_size
-        self.cylinder_object_ids = []  # Required to track the position of cylinders.
-        self.detected_object_ids = []
-        self.resolution = 100
-        self.world_map = np.zeros((area_size*self.resolution, area_size*self.resolution), dtype=np.uint8)  # Track obstacles. 0 -> Free space; 1 -> obstacle
-        self.radius_cyl = 0.5
-        self.height_cyl = 2.0
-        self.obstacle_detect_threshold = 3
         #### Constants #############################################
         self.G = 9.8
         self.RAD2DEG = 180/np.pi
@@ -987,76 +975,34 @@ class BaseAviary(gym.Env):
                                                       )
 
     ################################################################################
-
-    def check_collision_before_spawn(self, x, y, z, radius, height):
-        # Check for collisions with existing cylinders
-        collision = False
-        for i in range(p.getNumBodies(physicsClientId=self.CLIENT)):
-            body_info = p.getBodyInfo(i, physicsClientId=self.CLIENT)
-            if body_info[0].decode('UTF-8') == "cylinder":
-                # Get the position of the existing cylinder
-                pos, _ = p.getBasePositionAndOrientation(i, physicsClientId=self.CLIENT)
-                # Check if there is a collision with the existing cylinder
-                distance = ((pos[0] - x) ** 2 + (pos[1] - y) ** 2 + (pos[2] - z) ** 2) ** 0.5
-                if distance < (radius + 1.0):  # Adjust the collision distance based on your requirements
-                    collision = True
-                    break
-
-        return collision
-
-    def meter_to_world_map(self, value):
-        return int((value + self.area_size/2)*self.resolution)
-
-
     def _addObstacles(self):
         """Add obstacles to the environment.
 
         These obstacles are loaded from standard URDF files included in Bullet.
 
         """
-        #p.loadURDF("samurai.urdf",
-                   #physicsClientId=self.CLIENT
-                   #)
-        # p.loadURDF("duck_vhacd.urdf",
-        #            [-.5, -.5, .05],
-        #            p.getQuaternionFromEuler([0, 0, 0]),
-        #            physicsClientId=self.CLIENT
-        #            )
-        # p.loadURDF("cube_no_rotation.urdf",
-        #            [-.5, -2.5, .5],
-        #            p.getQuaternionFromEuler([0, 0, 0]),
-        #            physicsClientId=self.CLIENT
-        #            )
-        #p.loadURDF("assets/lego.urdf",
-                   #[-.5, -2.5, .5],
-                   #p.getQuaternionFromEuler([0,0,0]),
-                   #physicsClientId=self.CLIENT
-                   #)
+        p.loadURDF("samurai.urdf",
+                   physicsClientId=self.CLIENT
+                   )
+        p.loadURDF("duck_vhacd.urdf",
+                   [-.5, -.5, .05],
+                   p.getQuaternionFromEuler([0, 0, 0]),
+                   physicsClientId=self.CLIENT
+                   )
+        p.loadURDF("cube_no_rotation.urdf",
+                   [-.5, -2.5, .5],
+                   p.getQuaternionFromEuler([0, 0, 0]),
+                   physicsClientId=self.CLIENT
+                   )
+        p.loadURDF("assets/lego.urdf",
+                   [-.5, -2.5, .5],
+                   p.getQuaternionFromEuler([0,0,0]),
+                   physicsClientId=self.CLIENT
+                   )
 
-        #p.loadURDF("assets/cylinder.urdf", [2, 2, 2]
-            #,physicsClientId=self.CLIENT
-            #)
-
-        for _ in range(self.num_cylinders):
-            while True:
-                # Random position within the area
-                x_cyl = random.uniform(-self.area_size / 2, self.area_size / 2)
-                y_cyl = random.uniform(-self.area_size / 2, self.area_size / 2)
-                z_cyl = 2  # Assuming the ground is at z=0
-                radius_cyl = 0.5
-                height_cyl = 2.0
-
-                # Check for collisions before spawning
-                if not self.check_collision_before_spawn(x_cyl, y_cyl, z_cyl, radius_cyl, height_cyl):
-                    break
-
-            # Spawn the cylinder at the random position
-            self.cylinder_object_ids.append(p.loadURDF("assets/cylinder.urdf",
-                       [x_cyl, y_cyl, z_cyl],
-                       p.getQuaternionFromEuler([0, 0, 0]),
-                       physicsClientId=self.CLIENT
-                       ))
-        
+        p.loadURDF("assets/cylinder.urdf", [2, 2, 2]
+            ,physicsClientId=self.CLIENT
+            )
         return
 
     ################################################################################

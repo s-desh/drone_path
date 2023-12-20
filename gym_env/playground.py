@@ -123,7 +123,7 @@ def run(
     #                 colab=colab
     #                 )
 
-    # #### Initialize the controllers ############################
+    # # #### Initialize the controllers ############################
     # if drone in [DroneModel.CF2X, DroneModel.CF2P]:
     #     ctrl = [DSLPIDControl(drone_model=drone) for i in range(num_drones)]
 
