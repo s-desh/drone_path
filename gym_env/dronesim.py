@@ -98,7 +98,6 @@ class DroneSim(CtrlAviary):
                   int(self.drone_size[0] * self.resolution), 255, -1)
 
         self.occ_map = create_occ_map(self.world_map, self.drone_obs_matrix)
-        # out = test_occ_map(self.occ_map, self.world_map)
 
 
     def meter_to_world_map(self, value: float):
