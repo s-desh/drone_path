@@ -274,8 +274,8 @@ class RRTStar:
                     self.connect_goal(i)
                     if self.path_found:
                         return self.get_final_path()
-            assert True, self.print("Path not found")
-            return None
+        assert True, self.print("Path not found")
+        return None
 
     def fix_path(self, child, parent):
         pass

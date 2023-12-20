@@ -96,8 +96,19 @@ class DroneSim(CtrlAviary):
 
         self.occ_map = create_occ_map(self.world_map, self.drone_obs_matrix)
 
-    def meter_to_world_map(self, value):
-        return int((value + self.area_size / 2) * self.resolution)
+    def meter_to_world_map(self, value: float):
+        if isinstance(value, float):
+            return int((value + self.area_size / 2) * self.resolution)
+        elif isinstance(value, np.ndarray):
+            value_shape = value.shape
+            value_flatten = value.flatten()
+            n_value_flatten = np.empty_like(value_flatten, dtype=int)
+            for i in range(len(value_flatten)):
+                n_value_flatten[i] = self.meter_to_world_map(value_flatten[i])
+            return n_value_flatten.reshape(value_shape)
+        else:
+            raise ValueError("Unsupported data type for 'value' parameter.")
+
 
     def _detectObstacles(self):
         # obstacle detection based on current postion of drones, runs after every step

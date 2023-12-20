@@ -31,7 +31,7 @@ from enums import DroneModel, Physics
 from dronesim import DroneSim
 from RRT import RRTStar
 
-from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
+# from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 # from gym_pybullet_drones.utils.Logger import Logger
 # from gym_pybullet_drones.utils.utils import sync, str2bool
 
@@ -48,7 +48,7 @@ DEFAULT_CONTROL_FREQ_HZ = 48
 DEFAULT_DURATION_SEC = 2000
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
-NUM_OF_CYLLINDERS = 15
+NUM_OF_CYLLINDERS = 10
 AREA_SIZE = 5
 
 def run(
@@ -98,8 +98,8 @@ def run(
     PYB_CLIENT = env.getPyBulletClient()
 
     # #### Initialize the controllers ############################
-    if drone in [DroneModel.CF2X, DroneModel.CF2P]:
-        ctrl = [DSLPIDControl(drone_model=drone) for i in range(num_drones)]
+    # if drone in [DroneModel.CF2X, DroneModel.CF2P]:
+    #     ctrl = [DSLPIDControl(drone_model=drone) for i in range(num_drones)]
 
     # #### Run the simulation ####################################
     action = np.zeros((num_drones, 4))
@@ -107,7 +107,8 @@ def run(
     goals = []
     for i in range(num_drones):
         while True:
-            test_posn = np.array([area_size - np.random.random(), area_size - np.random.random()])
+            test_posn = env.meter_to_world_map(np.array([area_size/2 - np.random.random(),
+                                                         area_size/2 - np.random.random()]))
             if env.occ_map[test_posn[1], test_posn[0]] == 0:
                 goals.append(test_posn)
                 break
@@ -117,13 +118,14 @@ def run(
     for i in range(0, int(duration_sec * env.CTRL_FREQ)):
         # print(i)
         obs, reward, terminated, truncated, info = env.step(action)
-        action[j, :], _, _ = ctrl[j].computeControlFromState(control_timestep=env.CTRL_TIMESTEP,
-                                                             state=obs[j],
-                                                             target_pos=np.hstack(
-                                                                 [TARGET_POS[wp_counters[j], 0:2], INIT_XYZS[j, 2]]),
-                                                             # target_pos=INIT_XYZS[j, :] + TARGET_POS[wp_counters[j], :],
-                                                             target_rpy=INIT_RPYS[j, :]
-                                                             )
+        # action[j, :], _, _ = ctrl[j].computeControlFromState(control_timestep=env.CTRL_TIMESTEP,
+        #                                                      state=obs[j],
+        #                                                      target_pos=np.hstack(
+        #                                                          [TARGET_POS[wp_counters[j], 0:2], INIT_XYZS[j, 2]]),
+        #                                                      # target_pos=INIT_XYZS[j, :] + TARGET_POS[wp_counters[j], :],
+        #                                                      target_rpy=INIT_RPYS[j, :]
+        #                                                      )
+        print(i)
 
     #### Close the environment #################################
     env.close()
