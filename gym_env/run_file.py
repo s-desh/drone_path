@@ -27,6 +27,7 @@ import numpy as np
 import pybullet as p
 import matplotlib.pyplot as plt
 
+from control.DSLPIDControl import DSLPIDControl
 from enums import DroneModel, Physics
 from dronesim import DroneSim
 from RRT import RRTStar
@@ -98,8 +99,17 @@ def run(
     PYB_CLIENT = env.getPyBulletClient()
 
     # #### Initialize the controllers ############################
-    # if drone in [DroneModel.CF2X, DroneModel.CF2P]:
-    #     ctrl = [DSLPIDControl(drone_model=drone) for i in range(num_drones)]
+    if drone in [DroneModel.CF2X, DroneModel.CF2P]:
+        ctrl = [DSLPIDControl(drone_model=drone) for i in range(num_drones)]
+
+    
+    #### Initialize a circular trajectory ######################
+    PERIOD = 10
+    NUM_WP = control_freq_hz*PERIOD
+    TARGET_POS = np.zeros((NUM_WP,3))
+    for i in range(NUM_WP):
+        TARGET_POS[i, :] = R*np.cos((i/NUM_WP)*(2*np.pi)+np.pi/2)+INIT_XYZS[0, 0], R*np.sin((i/NUM_WP)*(2*np.pi)+np.pi/2)-R+INIT_XYZS[0, 1], 0
+    wp_counters = np.array([int((i*NUM_WP/6)%NUM_WP) for i in range(num_drones)])
 
     # #### Run the simulation ####################################
     action = np.zeros((num_drones, 4))
@@ -113,19 +123,27 @@ def run(
                 goals.append(test_posn)
                 break
     goals = np.array(goals)
-    rrt_array = [RRTStar(env.occ_map, env.pos[i, :2], goals[i], 10, 5000, True, i) for i in range(num_drones)]
+    # rrt_array = [RRTStar(env.occ_map, env.pos[i, :2], goals[i], 10, 5000, True, i) for i in range(num_drones)]
 
     for i in range(0, int(duration_sec * env.CTRL_FREQ)):
         # print(i)
-        obs, reward, terminated, truncated, info = env.step(action)
-        # action[j, :], _, _ = ctrl[j].computeControlFromState(control_timestep=env.CTRL_TIMESTEP,
-        #                                                      state=obs[j],
-        #                                                      target_pos=np.hstack(
-        #                                                          [TARGET_POS[wp_counters[j], 0:2], INIT_XYZS[j, 2]]),
-        #                                                      # target_pos=INIT_XYZS[j, :] + TARGET_POS[wp_counters[j], :],
-        #                                                      target_rpy=INIT_RPYS[j, :]
-        #                                                      )
-        print(i)
+        for j in range(num_drones):
+            obs, reward, terminated, truncated, info = env.step(action)
+            action[j, :], _, _ = ctrl[j].computeControlFromState(control_timestep=env.CTRL_TIMESTEP,
+                                                                state=obs[j],
+                                                                target_pos=np.hstack(
+                                                                    [TARGET_POS[wp_counters[j], 0:2], INIT_XYZS[j, 2]]),
+                                                                # target_pos=INIT_XYZS[j, :] + TARGET_POS[wp_counters[j], :],
+                                                                target_rpy=INIT_RPYS[j, :]
+                                                                )
+        
+        
+        #### Go to the next way point and loop #####################
+        for j in range(num_drones):
+            wp_counters[j] = wp_counters[j] + 1 if wp_counters[j] < (NUM_WP-1) else 0
+
+        print(f"timestep - {i}")
+        print(f"drone - {j}")
 
     #### Close the environment #################################
     env.close()
