@@ -73,7 +73,7 @@ class DroneSim(CtrlAviary):
         self.detected_object_ids = []
         self.radius_cyl = 0.5
         self.height_cyl = 2.0
-        self.obstacle_detect_threshold = 0.5
+        self.obstacle_detect_threshold = 2
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
                          neighbourhood_radius=neighbourhood_radius,
