@@ -380,6 +380,8 @@ class BaseAviary(gym.Env):
         terminated = self._computeTerminated()
         truncated = self._computeTruncated()
         info = self._computeInfo()
+        ### run location detection ###
+        self._detectObstacles()
         #### Advance the step counter ##############################
         self.step_counter = self.step_counter + (1 * self.PYB_STEPS_PER_CTRL)
         return obs, reward, terminated, truncated, info
@@ -1003,7 +1005,11 @@ class BaseAviary(gym.Env):
             )
         return
 
+    ################################################################################
 
+
+    def _detectObstacles(self):
+        raise NotImplementedError
     ################################################################################
 
     def _parseURDFParameters(self):
