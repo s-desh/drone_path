@@ -77,8 +77,12 @@ class BaseAviary(gym.Env):
         self.num_cylinders = num_cylinders
         self.area_size = area_size
         self.cylinder_object_ids = []  # Required to track the position of cylinders.
-        self.resolution = 100  # 1 meter equals 100 pixels on map
+        self.detected_object_ids = []
+        self.resolution = 100
         self.world_map = np.zeros((area_size*self.resolution, area_size*self.resolution), dtype=np.uint8)  # Track obstacles. 0 -> Free space; 1 -> obstacle
+        self.radius_cyl = 0.5
+        self.height_cyl = 2.0
+        self.obstacle_detect_threshold = 3
         #### Constants #############################################
         self.G = 9.8
         self.RAD2DEG = 180/np.pi
@@ -388,6 +392,8 @@ class BaseAviary(gym.Env):
         terminated = self._computeTerminated()
         truncated = self._computeTruncated()
         info = self._computeInfo()
+        ### run location detection ###
+        self._detectObstacles()
         #### Advance the step counter ##############################
         self.step_counter = self.step_counter + (1 * self.PYB_STEPS_PER_CTRL)
         return obs, reward, terminated, truncated, info
@@ -1050,10 +1056,14 @@ class BaseAviary(gym.Env):
                        p.getQuaternionFromEuler([0, 0, 0]),
                        physicsClientId=self.CLIENT
                        ))
-            cv.circle(self.world_map, (self.meter_to_world_map(x_cyl), self.meter_to_world_map(y_cyl)), int(radius_cyl*self.resolution), 255, -1)
+        
         return
 
+    ################################################################################
 
+
+    def _detectObstacles(self):
+        raise NotImplementedError
     ################################################################################
 
     def _parseURDFParameters(self):
