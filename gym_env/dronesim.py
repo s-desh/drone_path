@@ -10,6 +10,8 @@ from RRT import *
 from controlenv import CtrlAviary
 from enums import DroneModel, Physics
 
+HEIGHT_DIFF = .1  # Height difference between nodes
+
 
 class DroneSim(CtrlAviary):
     """Multi-drone environment class for control applications."""
@@ -31,7 +33,7 @@ class DroneSim(CtrlAviary):
                  user_debug_gui=True,
                  output_folder='results',
                  num_cylinders=10,  # Control number of cylinders to be made,
-                 area_size=5,  # Area of the environment for our use case.
+                 area_size=5.0,  # Area of the environment for our use case.
                  ):
         """Initialization of an aviary environment for control applications.
 
@@ -74,6 +76,12 @@ class DroneSim(CtrlAviary):
         self.radius_cyl = 0.5
         self.height_cyl = 2.0
         self.obstacle_detect_threshold = 0.5
+        self.cylinder_posns = None
+
+        if initial_xyzs is None:
+            initial_xyzs, self.cylinder_posns = self.create_env(num_drones, num_cylinders)
+            initial_rpys = np.zeros_like(initial_xyzs)
+
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
                          neighbourhood_radius=neighbourhood_radius,
@@ -97,9 +105,7 @@ class DroneSim(CtrlAviary):
                   (int(self.drone_size[0] * self.resolution), int(self.drone_size[0] * self.resolution)),
                   int(self.drone_size[0] * self.resolution), 255, -1)
 
-        self.occ_map = create_occ_map(self.world_map, self.drone_obs_matrix)
-
-    def meter_to_world_map(self, value: float):
+    def meter_to_world_map(self, value):
         if isinstance(value, float):
             return int((value + self.area_size / 2) * self.resolution)
         elif isinstance(value, np.ndarray):
@@ -111,6 +117,45 @@ class DroneSim(CtrlAviary):
             return n_value_flatten.reshape(value_shape)
         else:
             raise ValueError("Unsupported data type for 'value' parameter.")
+
+    def world_map_to_meter(self, value):
+        if isinstance(value, np.int64):
+            return value / self.resolution - self.area_size/2
+        elif isinstance(value, np.ndarray):
+            value_shape = value.shape
+            value_flatten = value.flatten()
+            n_value_flatten = np.empty_like(value_flatten, dtype=float)
+            for i in range(len(value_flatten)):
+                n_value_flatten[i] = self.world_map_to_meter(value_flatten[i])
+            return n_value_flatten.reshape(value_shape)
+        else:
+            raise ValueError("Unsupported data type for 'value' parameter.")
+
+    def get_random_posn(self):
+        out = np.random.random(2) * self.area_size - self.area_size / 2
+        return out
+
+    def create_env(self, num_of_drones: int, num_of_cylinders: int):
+        drone_nodes = np.empty((num_of_drones, 2), dtype=float)
+        cylinder_nodes = np.empty((num_of_cylinders, 2), dtype=float)
+
+        for i in range(num_of_drones):
+            drone_nodes[i] = np.array([-self.area_size / 2 * .9, -self.area_size / 2 * .9])
+
+        cylinder_nodes[:] = drone_nodes[0]
+
+        for i in range(num_of_cylinders):
+            while True:
+                temp = self.get_random_posn()
+                dist = min(np.min(np.linalg.norm(drone_nodes - temp, axis=1)),
+                           np.min(np.linalg.norm(cylinder_nodes - temp, axis=1)))
+                if dist > self.radius_cyl * 2 * 1.15:
+                    break
+            cylinder_nodes[i] = temp
+        drone_nodes_xyz = np.hstack(
+            [drone_nodes, (np.arange(num_of_drones) + 1).reshape((num_of_drones, 1)) * HEIGHT_DIFF])
+        cylinder_nodes_xyz = np.hstack([cylinder_nodes, np.ones((num_of_cylinders, 1)) * 1.1])
+        return drone_nodes_xyz, cylinder_nodes_xyz
 
     def _detectObstacles(self):
         # obstacle detection based on current postion of drones, runs after every step
@@ -133,11 +178,11 @@ class DroneSim(CtrlAviary):
                     # one drone can only be close to one cylinder below the thresh
                     continue
 
-        cv.imshow("occupancy", self.world_map)
-
-        key = cv.waitKey(100)
-        if key == ord('q'):
-            cv.destroyAllWindows()
+        # cv.imshow("occupancy", self.world_map.T)
+        #
+        # key = cv.waitKey(100)
+        # if key == ord('q'):
+        #     cv.destroyAllWindows()
 
     def check_collision_before_spawn(self, x, y, z, radius, height):
         # Check for collisions with existing cylinders
@@ -161,25 +206,38 @@ class DroneSim(CtrlAviary):
         These obstacles are loaded from standard URDF files included in Bullet.
 
         """
-        for _ in range(self.num_cylinders):
-            while True:
-                # Random position within the area
-                x_cyl = random.uniform(-self.area_size / 2, self.area_size / 2)
-                y_cyl = random.uniform(-self.area_size / 2, self.area_size / 2)
-                z_cyl = 2  # Assuming the ground is at z=0
-                radius_cyl = 0.5
-                height_cyl = 2.0
+        if self.cylinder_posns is None:
+            for _ in range(self.num_cylinders):
+                while True:
+                    # Random position within the area
+                    x_cyl = random.uniform(-self.area_size / 2, self.area_size / 2)
+                    y_cyl = random.uniform(-self.area_size / 2, self.area_size / 2)
+                    z_cyl = 2  # Assuming the ground is at z=0
+                    radius_cyl = self.radius_cyl
+                    height_cyl = 2.0
 
-                # Check for collisions before spawning
-                if not self.check_collision_before_spawn(x_cyl, y_cyl, z_cyl, radius_cyl, height_cyl):
-                    break
+                    # Check for collisions before spawning
+                    if not self.check_collision_before_spawn(x_cyl, y_cyl, z_cyl, radius_cyl, height_cyl):
+                        break
 
-            # Spawn the cylinder at the random position
-            self.cylinder_object_ids.append(p.loadURDF("assets/cylinder.urdf",
-                                                       [x_cyl, y_cyl, z_cyl],
-                                                       p.getQuaternionFromEuler([0, 0, 0]),
-                                                       physicsClientId=self.CLIENT
-                                                       ))
-            # cv.circle(self.world_map, (self.meter_to_world_map(x_cyl), self.meter_to_world_map(y_cyl)),
-            #           int(radius_cyl * self.resolution), 255, -1)
-        return
+                # Spawn the cylinder at the random position
+                self.cylinder_object_ids.append(p.loadURDF("assets/cylinder.urdf",
+                                                           [x_cyl, y_cyl, z_cyl],
+                                                           p.getQuaternionFromEuler([0, 0, 0]),
+                                                           physicsClientId=self.CLIENT
+                                                           ))
+                # todo: comment the line below
+                cv.circle(self.world_map, (self.meter_to_world_map(x_cyl), self.meter_to_world_map(y_cyl)),
+                          int(radius_cyl * self.resolution), 255, -1)
+            return
+
+        else:
+            for posn in self.cylinder_posns:
+                self.cylinder_object_ids.append(p.loadURDF("assets/cylinder.urdf",
+                                                           posn,
+                                                           p.getQuaternionFromEuler([0, 0, 0]),
+                                                           physicsClientId=self.CLIENT
+                                                           ))
+                # todo: comment the line below
+                cv.circle(self.world_map, (self.meter_to_world_map(posn[0]), self.meter_to_world_map(posn[1])),
+                          int(self.radius_cyl * self.resolution), 255, -1)

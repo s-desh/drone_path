@@ -46,13 +46,13 @@ class Node:
         self.child_nodes = []
 
     def __sub__(self, other):
-        return np.sum((self.posn - other.posn) ** 2)
+        return np.sqrt(np.sum((self.posn - other.posn) ** 2))
 
     def __str__(self):
         return f"X: {self.posn[0]} | y: {self.posn[1]} | Cost: {self.cost} | Id: {self.id}"
 
     def dist(self, other: np.ndarray):
-        return np.sum((self.posn - other) ** 2)
+        return np.sqrt(np.sum((self.posn - other) ** 2))
 
     def set_prev_node(self, id: int):
         self.prev_node = id
@@ -177,7 +177,7 @@ class RRTStar:
     def connect_goal(self, i):
         x_nearest = self.nearest_node(self.goal)
         dist = x_nearest - self.goal
-        self.print("Iteration:", i)
+        self.print("Iteration:" + str(i))
         if dist <= self.radius:
             self.add_node(self.goal)
             self.add_edge(x_nearest, self.goal)
@@ -220,6 +220,9 @@ class RRTStar:
                 if iter_i > max_i:
                     self.print("Linking error")
                     break
+        else:
+            cv.circle(out_img, self.goal.posn, node_radius, color=(255, 0, 0))
+            cv.circle(out_img, self.start.posn, node_radius, color=(0, 0, 255))
         return out_img
 
     def check_path(self, fix_path=True):
@@ -280,6 +283,20 @@ class RRTStar:
     def fix_path(self, child, parent):
         pass
 
+    def get_next_posn(self, current_posn, ret_posn=True):
+        current_posn = Node(current_posn, 0)
+        path = self.get_final_path(False)
+        dist = path - current_posn
+        closest_arg = np.sort(np.argwhere(dist <= self.radius)).flatten()[::-1]
+        for carg in closest_arg:
+            line, coll = self.line_btw_nodes(path[carg], current_posn)
+            if not coll:
+                if ret_posn:
+                    return path[carg].posn
+                else:
+                    return path[carg]
+        return None
+
     def get_final_path(self, ret_posn=True):
         if self.path_found:
             out_list = []
@@ -304,10 +321,11 @@ class RRTStar:
 
 def test_RRT_start():
     print("Start Test")
-    world_map = np.load("Test/world_map.npy")
-    drone_obs_matrix = np.load("Test/drone_obs_matrix.npy")
-    occ_map = np.load("Test/occ_map.npy")
+    # world_map = np.load("data/world_map.npy")
+    # drone_obs_matrix = np.load("data/drone_obs_matrix.npy")
+    occ_map = np.load("data/occ_map.npy")
     rrt = RRTStar(occ_map, np.array([15, 212]), np.array([440, 440]), 20, 5000, True)
+    path = rrt.find_path()
     out_img = rrt.plot_graph()
     nearest_goal = rrt.nearest_node(rrt.goal)
     on_obst = rrt.nearest_node(Node(np.array([200, 140]), -1))

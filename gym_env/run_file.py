@@ -26,12 +26,15 @@ import random
 import numpy as np
 import pybullet as p
 import matplotlib.pyplot as plt
+import cv2 as cv
 
-from enums import DroneModel, Physics
+from enums import Physics
 from dronesim import DroneSim
-from RRT import RRTStar
+from RRT import RRTStar, create_occ_map
 
-# from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
+from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
+from gym_pybullet_drones.utils.enums import DroneModel
+
 # from gym_pybullet_drones.utils.Logger import Logger
 # from gym_pybullet_drones.utils.utils import sync, str2bool
 
@@ -72,10 +75,8 @@ def run(
     H = .1
     H_STEP = .05
     R = .3
-    INIT_XYZS = np.array(
-        [[np.random.random() - area_size, np.random.random() - area_size, H + i*H_STEP]
-         for i in range(num_drones)])
-    INIT_RPYS = np.array([[0, 0, i * (np.pi / 2) / num_drones] for i in range(num_drones)])
+    INIT_XYZS = None
+    INIT_RPYS = None
 
     #### Create the environment ################################
     env = DroneSim(drone_model=drone,
@@ -99,7 +100,7 @@ def run(
 
     # #### Initialize the controllers ############################
     # if drone in [DroneModel.CF2X, DroneModel.CF2P]:
-    #     ctrl = [DSLPIDControl(drone_model=drone) for i in range(num_drones)]
+    ctrl = [DSLPIDControl(drone_model=drone) for i in range(num_drones)]
 
     # #### Run the simulation ####################################
     action = np.zeros((num_drones, 4))
@@ -113,18 +114,30 @@ def run(
                 goals.append(test_posn)
                 break
     goals = np.array(goals)
-    rrt_array = [RRTStar(env.occ_map, env.pos[i, :2], goals[i], 10, 5000, True, i) for i in range(num_drones)]
+    occ_map = create_occ_map(env.world_map, env.drone_obs_matrix)
+    rrt_array = [RRTStar(occ_map, env.meter_to_world_map(env.pos[i, :2]), goals[i], 20, 5000, True, i) for i in range(num_drones)]
+    for rrt in rrt_array:
+        path = rrt.find_path()
+        cv.imshow("occupancy: " + str(rrt), cv.rotate(rrt.plot_graph(), cv.ROTATE_90_CLOCKWISE))
 
     for i in range(0, int(duration_sec * env.CTRL_FREQ)):
         # print(i)
         obs, reward, terminated, truncated, info = env.step(action)
-        # action[j, :], _, _ = ctrl[j].computeControlFromState(control_timestep=env.CTRL_TIMESTEP,
-        #                                                      state=obs[j],
-        #                                                      target_pos=np.hstack(
-        #                                                          [TARGET_POS[wp_counters[j], 0:2], INIT_XYZS[j, 2]]),
-        #                                                      # target_pos=INIT_XYZS[j, :] + TARGET_POS[wp_counters[j], :],
-        #                                                      target_rpy=INIT_RPYS[j, :]
-        #                                                      )
+        for j in range(num_drones):
+            curr_drone_pos_mtr = env.pos[j, :]
+            curr_drone_pos = env.meter_to_world_map(curr_drone_pos_mtr[:2])
+            goal_posn = rrt_array[j].get_next_posn(curr_drone_pos)
+            goal_posn_mtr = env.world_map_to_meter(goal_posn)
+            target_drone_xyz = np.array([goal_posn_mtr[0], goal_posn_mtr[1], curr_drone_pos_mtr[2]])
+            target_drone_rpy = env.rpy[j, :]
+            action[j, :], _, _ = ctrl[j].computeControlFromState(control_timestep=env.CTRL_TIMESTEP,
+                                                                 state=obs[j],
+                                                                 target_pos=target_drone_xyz,
+                                                                 # target_pos=INIT_XYZS[j, :] + TARGET_POS[wp_counters[j], :],
+                                                                 target_rpy=target_drone_rpy
+                                                                 )
+            print("J: ", j, "current_drone_posn: ", curr_drone_pos, "goal_posn: ", goal_posn, "target_drone_posn: ",
+                  target_drone_xyz)
         print(i)
 
     #### Close the environment #################################
