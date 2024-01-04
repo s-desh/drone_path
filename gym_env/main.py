@@ -35,7 +35,7 @@ DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 NUM_OF_CYLLINDERS = 10
 AREA_SIZE = 10
-GRID_SIZE = int(AREA_SIZE / 5)
+GRID_SIZE = int(AREA_SIZE / 1)
 
 def run(
         drone=DEFAULT_DRONES,
@@ -80,12 +80,13 @@ def run(
     
     #### Get global path #######################################
     drone_paths = bfs_multi_drones(GRID_SIZE, num_drones)
+    print(f"Drone paths: {drone_paths}")
     
     #### Initialize drones #####################################
     drones = [Drone(
         id=i,
         env=env,
-        global_path=drone_paths[i]
+        global_path=drone_paths[i+1], drone_model=drone, stub=True
     ) for i in range(num_drones)]
 
     occ_map = create_occ_map(env.world_map, env.drone_obs_matrix)
@@ -98,7 +99,7 @@ def run(
     for i in range(0, int(duration_sec * env.CTRL_FREQ)):
         obs, reward, terminated, truncated, info = env.step(action)
         for drone in drones:
-            action[drone.id] = drone.step_action(obs)
+            action[drone.id,:] = drone.step_action(obs[drone.id], debug=True)
     
     env.close()
 
