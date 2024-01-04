@@ -81,7 +81,7 @@ def run(
     #### Get global path #######################################
     drone_paths = bfs_multi_drones(GRID_SIZE, num_drones)
     print(f"Drone paths: {drone_paths}")
-    
+
     #### Initialize drones #####################################
     drones = [Drone(
         id=i,

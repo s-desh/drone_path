@@ -35,7 +35,9 @@ class Drone:
 
     def update(self, occ_map) -> None:
         print("Updating RRT for new global goal position")
-        self.rrt = RRTStar(occ_map, self.get_curr_posn(xyz=False), self.get_next_globalgoal_posn(), 20, 5000, True, id)
+        next_global_goal_posn = self.get_next_globalgoal_posn()
+        print("Next global goal position: ", next_global_goal_posn)
+        self.rrt = RRTStar(occ_map, self.get_curr_posn(xyz=False), next_global_goal_posn, 20, 5000, True, id)
         _ = self.rrt.find_path()
         newocc_map = create_occ_map(self.env.world_map, self.env.drone_obs_matrix_red)
         self.rrt.update_occmap(newocc_map)
