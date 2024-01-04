@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Dec 13 13:42:55 2023
+Created on Wed Dec 20 22:05:37 2023
 
 @author: manupriyasingh
 """
-
 import numpy as np
 from collections import deque
 
 
 class GlobalPlanner:
-    def __init__(self, drone_id, start=(50, 0)):
+    def __init__(self, drone_id, start):
         self.id = drone_id
         self.position = start
         self.visited_cells = set()
@@ -20,16 +19,11 @@ class GlobalPlanner:
     def move(self, grid, queue, visited):
         x, y = self.position
 
-        # Define potential moves (up, down, left, right).
-        potential_moves = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1), (x + 1, y + 1), (x - 1, y - 1),
-                           (x + 1, y - 1), (x - 1, y + 1)]
+        # Moves in 4 directions
+        potential_moves = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
 
         for move in potential_moves:
-            if (
-                    0 <= move[0] < grid.shape[0]
-                    and 0 <= move[1] < grid.shape[1]
-                    and move not in visited
-            ):
+            if ((0 <= move[0] < grid.shape[0]) and (0 <= move[1] < grid.shape[1]) and (move not in visited)):
                 # Move to the new cell and mark it as visited.
                 self.position = move
                 self.visited_cells.add(move)
@@ -42,7 +36,9 @@ class GlobalPlanner:
 
 def bfs_multi_drones(grid_size, num_drones):
     grid = np.zeros((grid_size, grid_size))
-    drones = [GlobalPlanner(i) for i in range(num_drones)]
+
+    starting_points = [(3 + i, 0) for i in range(2, 2 + num_drones)]
+    drones = [GlobalPlanner(i, start=starting_points[i]) for i in range(num_drones)]
 
     # Initialize a queue for BFS.
     bfs_queue = deque()
@@ -56,13 +52,13 @@ def bfs_multi_drones(grid_size, num_drones):
     while bfs_queue:
         current_drone_id, current_position = bfs_queue.popleft()
 
-        # Move the current drone to an unvisited adjacent cell.
         current_drone = drones[current_drone_id]
         current_drone.move(grid, bfs_queue, set.union(*(drone.visited_cells for drone in drones)))
 
-        # Continue the simulation until all drones have moved at least once.
+        # Added min path length so that each drone should move somewhat similar cells
+        min_path_length = min(len(drone.path) for drone in drones)
         for i, drone in enumerate(drones):
-            if len(drone.path) < len(current_drone.path):
+            if len(drone.path) < min_path_length:
                 bfs_queue.append((i, drone.position))
 
     # Return the paths covered by each drone.
@@ -71,21 +67,27 @@ def bfs_multi_drones(grid_size, num_drones):
 
 
 if __name__ == "__main__":
-    # Set parameters for the simulation.
-    grid_size = 100
+    grid_size = 10
     num_drones = 5
 
     # Run the BFS for multiple drones.
     drone_paths = bfs_multi_drones(grid_size, num_drones)
 
-    ## Print the paths covered by each drone.
-    # for drone, path in drone_paths.items():
-    #     print(f"{drone} path: {path}")
-
-    visit = np.ones((grid_size, grid_size))*-1
+    # Checking the covered cells by printing grid
+    visit = np.zeros((grid_size, grid_size))
     for drone, path in drone_paths.items():
-        dron_id = float(drone[-1])
+        drone_id = drone[-1]
         for p in path:
-            visit[p[1], p[0]] = dron_id
+            visit[p[0], p[1]] = drone_id
 
-    print("done")
+    if np.any(visit == 0):
+        print("There is at least one cell not visited.")
+
+    else:
+        print("All cells have been visited.")
+
+    print("Grid:")
+    print(visit)
+    # checking the number of cells covered by each drone (checking min_length condition previosuly added)
+    for key, value in drone_paths.items():
+        print(key, len([item for item in value if item]))
