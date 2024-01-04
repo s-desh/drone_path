@@ -30,7 +30,7 @@ import cv2 as cv
 
 from enums import Physics
 from dronesim import DroneSim
-from RRT import RRTStar, create_occ_map
+from RRT import RRTStar, create_occ_map, transform_occ_img
 
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.enums import DroneModel
@@ -54,6 +54,7 @@ DEFAULT_COLAB = False
 NUM_OF_CYLLINDERS = 10
 AREA_SIZE = 5
 
+
 def run(
         drone=DEFAULT_DRONES,
         num_drones=DEFAULT_NUM_DRONES,
@@ -68,7 +69,7 @@ def run(
         duration_sec=DEFAULT_DURATION_SEC,
         output_folder=DEFAULT_OUTPUT_FOLDER,
         colab=DEFAULT_COLAB,
-        num_cyllinders = NUM_OF_CYLLINDERS,
+        num_cyllinders=NUM_OF_CYLLINDERS,
         area_size=AREA_SIZE
 ):
     #### Initialize the simulation #############################
@@ -108,17 +109,24 @@ def run(
     goals = []
     for i in range(num_drones):
         while True:
-            test_posn = env.meter_to_world_map(np.array([area_size/2 - np.random.random(),
-                                                         area_size/2 - np.random.random()]))
+            test_posn = env.meter_to_world_map(np.array([area_size / 2 - np.random.random(),
+                                                         area_size / 2 - np.random.random()]))
             if env.occ_map[test_posn[1], test_posn[0]] == 0:
                 goals.append(test_posn)
                 break
     goals = np.array(goals)
     occ_map = create_occ_map(env.world_map, env.drone_obs_matrix)
-    rrt_array = [RRTStar(occ_map, env.meter_to_world_map(env.pos[i, :2]), goals[i], 20, 5000, True, i) for i in range(num_drones)]
+    rrt_array = [RRTStar(occ_map, env.meter_to_world_map(env.pos[i, :2]), goals[i], 20, 5000, True, i) for i in
+                 range(num_drones)]
+
+    newocc_map = create_occ_map(env.world_map, env.drone_obs_matrix)
+
     for rrt in rrt_array:
         path = rrt.find_path()
-        cv.imshow("occupancy: " + str(rrt), cv.rotate(rrt.plot_graph(), cv.ROTATE_90_CLOCKWISE))
+        rrt.update_occmap(newocc_map)
+        plot_rrt = rrt.plot_graph()
+        cv.imshow("occupancy: " + str(rrt), transform_occ_img(plot_rrt))
+        cv.waitKey(1)
 
     for i in range(0, int(duration_sec * env.CTRL_FREQ)):
         # print(i)
@@ -138,6 +146,11 @@ def run(
                                                                  )
             print("J: ", j, "current_drone_posn: ", curr_drone_pos, "goal_posn: ", goal_posn, "target_drone_posn: ",
                   target_drone_xyz)
+
+            cv.circle(plot_rrt, curr_drone_pos, radius=1, color=(255, 255, 255), thickness=-1)
+            cv.imshow("occupancy: " + str(rrt), transform_occ_img(plot_rrt))
+            cv.waitKey(1)
+
         print(i)
 
     #### Close the environment #################################

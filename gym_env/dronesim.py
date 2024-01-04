@@ -98,6 +98,7 @@ class DroneSim(CtrlAviary):
                          )
         self.drone_size = \
             (.06 * 1.15, .025)  # in meters. Represented as a cylinder (radius * additional space and height)
+        self.drone_size_reduced = (.06 * 1.05, .025)
         self.drone_obs_matrix = np.zeros(
             (int(self.drone_size[0] * 2 * self.resolution), int(self.drone_size[0] * 2 * self.resolution)),
             dtype=np.uint8)

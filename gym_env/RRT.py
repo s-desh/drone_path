@@ -32,6 +32,10 @@ def test_occ_map(occ_map, world_map):
     return out
 
 
+def transform_occ_img(occ_img):
+    return cv.transpose(cv.rotate(occ_img, cv.ROTATE_90_CLOCKWISE))
+
+
 class Node:
     # For performing RRT in 2D space.
     id_iter = itertools.count()
@@ -104,6 +108,9 @@ class RRTStar:
     def print(self, val):
         print("Drone ", self.drone_id, ": ", val)
 
+    def update_occmap(self, new_occmap):
+        self.occ_map = new_occmap
+
     @staticmethod
     def distance_func(n1, n2):
         return n1 - n2
@@ -133,11 +140,13 @@ class RRTStar:
             if self.occ_map[ind[1], ind[0]] == 0:
                 return np.array(ind)
 
-    def line_collision(self, line: np.ndarray):
+    def line_collision(self, line: np.ndarray, debug=False):
         # Check if the edge passes through an obstacle. Line is represented by a set of integer indices.
         # Returns True if their is collision
         assert line.dtype == int, "line is a list of indices and must be of type integers"
         coll = np.sum(self.occ_map[line[:, 1], line[:, 0]])
+        if debug and coll != 0:
+            pass
         return False if coll == 0 else True
 
     def nearest_node(self, new_node):
@@ -164,9 +173,9 @@ class RRTStar:
                 prev_posn = new_posn
         return prev_posn
 
-    def line_btw_nodes(self, node1: Node, node2: Node):
+    def line_btw_nodes(self, node1: Node, node2: Node, debug=False):
         ind_line = np.array(line(node1.posn[0], node1.posn[1], node2.posn[0], node2.posn[1])).T
-        collision = self.line_collision(ind_line)
+        collision = self.line_collision(ind_line, debug)
         return ind_line, collision
 
     @staticmethod
@@ -287,9 +296,10 @@ class RRTStar:
         current_posn = Node(current_posn, 0)
         path = self.get_final_path(False)
         dist = path - current_posn
-        closest_arg = np.sort(np.argwhere(dist <= self.radius)).flatten()[::-1]
+        closest_arg = np.sort(np.argwhere(dist <= self.radius * 1.1)).flatten()[::-1]
         for carg in closest_arg:
-            line, coll = self.line_btw_nodes(path[carg], current_posn)
+            line, coll = self.line_btw_nodes(path[carg], current_posn, True)
+            coll = False
             if not coll:
                 if ret_posn:
                     return path[carg].posn
