@@ -33,8 +33,9 @@ from dronesim import DroneSim
 from RRT import RRTStar, create_occ_map, transform_occ_img
 from global_planner import bfs_multi_drones
 
-from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
-from gym_pybullet_drones.utils.enums import DroneModel
+from control.DSLPIDControl import DSLPIDControl
+from enums import DroneModel
+
 
 # from gym_pybullet_drones.utils.Logger import Logger
 # from gym_pybullet_drones.utils.utils import sync, str2bool
@@ -52,8 +53,8 @@ DEFAULT_CONTROL_FREQ_HZ = 48
 DEFAULT_DURATION_SEC = 2000
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
-NUM_OF_CYLLINDERS = 100
-AREA_SIZE = 50
+NUM_OF_CYLLINDERS = 10
+AREA_SIZE = 10
 GRID_SIZE = int(AREA_SIZE / 5)
 
 
@@ -120,7 +121,8 @@ def run(
                 break
     goals = np.array(goals)
     occ_map = create_occ_map(env.world_map, env.drone_obs_matrix)
-
+    rrt_array = [RRTStar(occ_map, env.meter_to_world_map(env.pos[i, :2]), goals[i], 20, 5000, True, i) for i in
+                 range(num_drones)]
     newocc_map = create_occ_map(env.world_map, env.drone_obs_matrix_red)
 
     for rrt in rrt_array:
