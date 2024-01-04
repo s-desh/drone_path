@@ -102,9 +102,15 @@ class DroneSim(CtrlAviary):
         self.drone_obs_matrix = np.zeros(
             (int(self.drone_size[0] * 2 * self.resolution), int(self.drone_size[0] * 2 * self.resolution)),
             dtype=np.uint8)
+        self.drone_obs_matrix_red = np.zeros(
+            (int(self.drone_size[0] * 2 * self.resolution), int(self.drone_size[0] * 2 * self.resolution)),
+            dtype=np.uint8)
         cv.circle(self.drone_obs_matrix,
                   (int(self.drone_size[0] * self.resolution), int(self.drone_size[0] * self.resolution)),
                   int(self.drone_size[0] * self.resolution), 255, -1)
+        cv.circle(self.drone_obs_matrix_red,
+                  (int(self.drone_size_reduced[0] * self.resolution), int(self.drone_size_reduced[0] * self.resolution)),
+                  int(self.drone_size_reduced[0] * self.resolution), 255, -1)
 
     def meter_to_world_map(self, value):
         if isinstance(value, float):

@@ -31,6 +31,7 @@ import cv2 as cv
 from enums import Physics
 from dronesim import DroneSim
 from RRT import RRTStar, create_occ_map, transform_occ_img
+from global_planner import bfs_multi_drones
 
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.enums import DroneModel
@@ -51,8 +52,9 @@ DEFAULT_CONTROL_FREQ_HZ = 48
 DEFAULT_DURATION_SEC = 2000
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
-NUM_OF_CYLLINDERS = 10
-AREA_SIZE = 5
+NUM_OF_CYLLINDERS = 100
+AREA_SIZE = 50
+GRID_SIZE = int(AREA_SIZE / 5)
 
 
 def run(
@@ -99,6 +101,8 @@ def run(
     #### Obtain the PyBullet Client ID from the environment ####
     PYB_CLIENT = env.getPyBulletClient()
 
+    drone_paths = bfs_multi_drones(GRID_SIZE, num_drones)
+
     # #### Initialize the controllers ############################
     # if drone in [DroneModel.CF2X, DroneModel.CF2P]:
     ctrl = [DSLPIDControl(drone_model=drone) for i in range(num_drones)]
@@ -116,13 +120,11 @@ def run(
                 break
     goals = np.array(goals)
     occ_map = create_occ_map(env.world_map, env.drone_obs_matrix)
-    rrt_array = [RRTStar(occ_map, env.meter_to_world_map(env.pos[i, :2]), goals[i], 20, 5000, True, i) for i in
-                 range(num_drones)]
 
-    newocc_map = create_occ_map(env.world_map, env.drone_obs_matrix)
+    newocc_map = create_occ_map(env.world_map, env.drone_obs_matrix_red)
 
     for rrt in rrt_array:
-        path = rrt.find_path()
+        _ = rrt.find_path()
         rrt.update_occmap(newocc_map)
         plot_rrt = rrt.plot_graph()
         cv.imshow("occupancy: " + str(rrt), transform_occ_img(plot_rrt))
