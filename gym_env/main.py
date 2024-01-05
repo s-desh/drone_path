@@ -19,7 +19,9 @@ from global_planner import bfs_multi_drones
 from control.DSLPIDControl import DSLPIDControl
 from enums import DroneModel
 from drone import Drone
+from log_config import setup_logger
 
+logger = setup_logger(__name__)
 
 DEFAULT_DRONES = DroneModel("cf2x")
 DEFAULT_NUM_DRONES = 2
@@ -63,6 +65,7 @@ def run(
     INIT_RPYS = None
 
     #### Create the environment ################################
+    logger.info("Creating environment...")
     env = DroneSim(drone_model=drone,
                    num_drones=num_drones,
                    initial_xyzs=INIT_XYZS,
@@ -81,7 +84,7 @@ def run(
     
     #### Get global path #######################################
     drone_paths = bfs_multi_drones(GRID_SIZE, num_drones)
-    print(f"Drone paths: {drone_paths}")
+    logger.info(f"Drone paths: {drone_paths}")
 
     #### Initialize drones #####################################
     drones = [Drone(
@@ -97,11 +100,15 @@ def run(
     #### Run the simulation ####################################
     action = np.zeros((num_drones, 4)) # rpms for every motor    
 
-    for i in range(0, int(duration_sec * env.CTRL_FREQ)):
-        obs, reward, terminated, truncated, info = env.step(action)
-        for drone in drones:
-            action[drone.id,:] = drone.step_action(obs[drone.id], debug=False)
-    
+    try:
+        for i in range(0, int(duration_sec * env.CTRL_FREQ)):
+            obs, reward, terminated, truncated, info = env.step(action)
+            for drone in drones:
+                action[drone.id,:] = drone.step_action(obs[drone.id], debug=False)
+    except Exception as e:
+        logger.error(e)
+        # pdb.set_trace()
+
     env.close()
 
 if __name__ == '__main__':

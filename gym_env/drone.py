@@ -4,6 +4,9 @@ import cv2 as cv
 from control.DSLPIDControl import DSLPIDControl
 from enums import DroneModel
 from enums import Physics
+from log_config import setup_logger
+
+logger = setup_logger(__name__)
 
 DEFAULT_DRONES = DroneModel("cf2x")
 class Drone:
@@ -16,7 +19,7 @@ class Drone:
         self.iter = 0
         self.stub = stub
         # self.get_next_globalgoal_posn = None
-        print("Drone {} initialized".format(self.id))
+        logger.info("Drone {} initialized".format(self.id))
 
     def get_next_globalgoal_posn(self, meter_to_world=True, local_coordinates=False):
         for i in range(self.iter, len(self.global_path)):
@@ -58,10 +61,11 @@ class Drone:
 
     def update(self, occ_map) -> None:
         # create new rrt for new global goal position, update occ_map
-        print(f"Drone {self.id} : Updating RRT for new global goal position")
+        logger.info(f"Drone {self.id} : Updating RRT for new global goal position")
         next_global_goal_posn = self.get_next_globalgoal_posn()
-        print(f"Drone {self.id} : Next global goal position for drone", next_global_goal_posn)
+        logger.info(f"Drone {self.id} : Next global goal position for drone {next_global_goal_posn}")
         self.rrt = RRTStar(occ_map, self.get_curr_posn(xyz=False), next_global_goal_posn, 20, 5000, True, self.id)
+        logger.info(f"Drone {self.id} : Finding path ... ")
         _ = self.rrt.find_path()
         newocc_map = create_occ_map(self.env.world_map, self.env.drone_obs_matrix_red)
         self.rrt.update_occmap(newocc_map)
@@ -83,15 +87,15 @@ class Drone:
                                                                  )
         
         if debug:
-            print("current_drone_posn: ", curr_pos, "next_local_goal_posn: ", goal_posn, "next_global_goal: ", self.get_next_globalgoal_posn())
+            logger.info(f"current_drone_posn: {curr_pos}, next_local_goal_posn: {goal_posn}, next_global_goal: {self.get_next_globalgoal_posn()}")
         
         
          # if current and global goal position are same, increment the global goal position
         if np.allclose(self.get_curr_posn(xyz=False), self.get_next_globalgoal_posn()):
-            print("Current and global goal position are same")
+            logger.info(f"Drone {self.id} : Current and global goal position are same")
 
             if self.iter + 1 == len(self.global_path):
-                print(f"------------Drone {self.id} : reached end of global path------------")
+                logger.info(f"------------Drone {self.id} : reached end of global path------------")
             # local_occ_map = self.get_local_occmap()
             else:
                 # update rrt with new global goal position
