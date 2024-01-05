@@ -34,14 +34,16 @@ class GlobalPlanner:
 
 def bfs_multi_drones(grid_size, num_drones):
     grid = np.zeros((grid_size, grid_size))
-    
-    starting_points = [(3 + i, 0) for i in range(2, 2 + num_drones)]
+
+    #for starting points while choosing more number of drones, add certain number (say 3 for 5 drones) to i, inorder to keep
+    #the drones starting position in approx middle.
+    starting_points = [(i, 0) for i in range(2, 2 + num_drones)]
     drones = [GlobalPlanner(i, start=starting_points[i]) for i in range(num_drones)]
 
-    # Initialize a queue for BFS.
+    # Initializing a queue for BFS.
     bfs_queue = deque()
 
-    # Start the BFS from the initial positions of the drones.
+    # Starting the BFS from the initial positions of the drones.
     for drone in drones:
         bfs_queue.append((drone.id, drone.position))
         drone.visited_cells.add(drone.position)
@@ -64,8 +66,8 @@ def bfs_multi_drones(grid_size, num_drones):
     return paths
 
 if __name__ == "__main__":
-    grid_size = 10
-    num_drones = 5
+    grid_size = 4
+    num_drones = 2
 
     # Run the BFS for multiple drones.
     drone_paths = bfs_multi_drones(grid_size, num_drones)
