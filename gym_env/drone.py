@@ -10,23 +10,27 @@ class Drone:
     def __init__(self, id, env, global_path, drone_model, stub=False):
         self.id = id
         self.env = env  
-        self.global_path = global_path if not stub else np.array([[947.0,900.0], [500.0, 500.0], [200.0, 200.0]])
+        self.global_path = global_path if not stub else np.array([[500.0,500.0], [500.0, 600.0], [500.0, 700.0]])
+        # np.array([[947.0,900.0], [500.0, 500.0], [200.0, 200.0]])
         self.control = DSLPIDControl(drone_model=drone_model)
-        # self.current_posn = self.env.pos[self.id, :2]
         self.iter = 0
         self.stub = stub
+        # self.get_next_globalgoal_posn = None
         print("Drone {} initialized".format(self.id))
 
-    def get_next_globalgoal_posn(self, meter_to_world=True):
-        # TODO: check if obstacle is present in the next global goal position
+    def get_next_globalgoal_posn(self, meter_to_world=True, local_coordinates=False):
         for i in range(self.iter, len(self.global_path)):
-            if self.env.occ_map[int(self.global_path[i][1]), int(self.global_path[i][0])] == 0:
+            goal_posn = self.global_path[i]
+            if not self.stub:
+                goal_posn = self.env.meter_to_world_map(np.array([self.global_path[i][0] - self.env.area_size/2, self.global_path[i][1] - self.env.area_size/2]))
+            # check for obstacles
+            if self.env.occ_map[int(goal_posn[1]), int(goal_posn[0])] == 0:
                 self.iter = i
                 break
         goal_posn = self.global_path[self.iter]
         if meter_to_world and not self.stub:
-            goal_posn = self.env.meter_to_world_map(np.array([goal_posn[0], goal_posn[1]]))              
-        # print(f"Next global goal position {goal_posn}")
+            # reorient the goal position to world map
+            goal_posn = self.env.meter_to_world_map(np.array([goal_posn[0] - self.env.area_size/2, goal_posn[1] - self.env.area_size/2]))
         return goal_posn
 
     def get_curr_posn(self, meter_to_world=True, xyz=True):
@@ -36,12 +40,28 @@ class Drone:
         if meter_to_world:
             posn = self.env.meter_to_world_map(posn)
         return posn
+    
+    def get_local_occmap(self):
+        raise NotImplementedError()
+        # not being used
+        # get new local occupancy map based on current position
+        cx, cy = self.get_curr_posn(xyz=False)
+        gx, gy = self.get_next_globalgoal_posn()
+        window_size = max(abs(gx - cx), abs(gy - cy))
+        buffer = 10
+        x_max = min(cx + window_size + buffer, self.env.occ_map.shape[0])
+        y_max = min(cy + window_size + buffer, self.env.occ_map.shape[1])
+        x_min = max(0, cx - window_size - buffer)
+        y_min = max(0, cy - window_size - buffer)
+        local_occ_map = self.env.occ_map[int(x_min):int(x_max), int(y_min):int(y_max)]
+        return local_occ_map
 
     def update(self, occ_map) -> None:
-        print("Updating RRT for new global goal position")
+        # create new rrt for new global goal position, update occ_map
+        print(f"Drone {self.id} : Updating RRT for new global goal position")
         next_global_goal_posn = self.get_next_globalgoal_posn()
-        print("Next global goal position: ", next_global_goal_posn)
-        self.rrt = RRTStar(occ_map, self.get_curr_posn(xyz=False), next_global_goal_posn, 20, 5000, True, id)
+        print(f"Drone {self.id} : Next global goal position for drone", next_global_goal_posn)
+        self.rrt = RRTStar(occ_map, self.get_curr_posn(xyz=False), next_global_goal_posn, 20, 5000, True, self.id)
         _ = self.rrt.find_path()
         newocc_map = create_occ_map(self.env.world_map, self.env.drone_obs_matrix_red)
         self.rrt.update_occmap(newocc_map)
@@ -64,14 +84,18 @@ class Drone:
         
         if debug:
             print("current_drone_posn: ", curr_pos, "next_local_goal_posn: ", goal_posn, "next_global_goal: ", self.get_next_globalgoal_posn())
+        
+        
          # if current and global goal position are same, increment the global goal position
         if np.allclose(self.get_curr_posn(xyz=False), self.get_next_globalgoal_posn()):
             print("Current and global goal position are same")
-            self.iter += 1
-            if self.iter >= len(self.global_path):
-                print("Reached the end of global path")
-                exit()
-            # update rrt with new global goal position
-            self.update(create_occ_map(self.env.world_map, self.env.drone_obs_matrix))
+
+            if self.iter + 1 == len(self.global_path):
+                print(f"------------Drone {self.id} : reached end of global path------------")
+            # local_occ_map = self.get_local_occmap()
+            else:
+                # update rrt with new global goal position
+                self.iter += 1
+                self.update(create_occ_map(self.env.world_map, self.env.drone_obs_matrix))
 
         return action

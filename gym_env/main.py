@@ -20,8 +20,9 @@ from control.DSLPIDControl import DSLPIDControl
 from enums import DroneModel
 from drone import Drone
 
+
 DEFAULT_DRONES = DroneModel("cf2x")
-DEFAULT_NUM_DRONES = 1
+DEFAULT_NUM_DRONES = 2
 DEFAULT_PHYSICS = Physics("pyb")
 DEFAULT_GUI = True
 DEFAULT_RECORD_VISION = False
@@ -35,7 +36,7 @@ DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 NUM_OF_CYLLINDERS = 10
 AREA_SIZE = 10
-GRID_SIZE = int(AREA_SIZE / 1)
+GRID_SIZE = int(AREA_SIZE / 2)
 
 def run(
         drone=DEFAULT_DRONES,
@@ -86,7 +87,7 @@ def run(
     drones = [Drone(
         id=i,
         env=env,
-        global_path=drone_paths[i+1], drone_model=drone, stub=True
+        global_path=drone_paths[i+1], drone_model=drone, stub=False
     ) for i in range(num_drones)]
 
     occ_map = create_occ_map(env.world_map, env.drone_obs_matrix)
@@ -99,7 +100,7 @@ def run(
     for i in range(0, int(duration_sec * env.CTRL_FREQ)):
         obs, reward, terminated, truncated, info = env.step(action)
         for drone in drones:
-            action[drone.id,:] = drone.step_action(obs[drone.id], debug=True)
+            action[drone.id,:] = drone.step_action(obs[drone.id], debug=False)
     
     env.close()
 
