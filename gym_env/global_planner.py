@@ -68,7 +68,7 @@ def bfs_multi_drones(grid_size, num_drones):
 
 if __name__ == "__main__":
     grid_size = 10
-    num_drones = 5
+    num_drones = 2
 
     # Run the BFS for multiple drones.
     drone_paths = bfs_multi_drones(grid_size, num_drones)
@@ -76,9 +76,9 @@ if __name__ == "__main__":
     # Checking the covered cells by printing grid
     visit = np.zeros((grid_size, grid_size))
     for drone, path in drone_paths.items():
-        drone_id = drone[-1]
+        drone_id = drone
         for p in path:
-            visit[p[0], p[1]] = drone_id
+            visit[int(p[0]), int(p[1])] = drone_id
 
     if np.any(visit == 0):
         print("There is at least one cell not visited.")

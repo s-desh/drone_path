@@ -71,7 +71,7 @@ class Drone:
         self.rrt.update_occmap(newocc_map)
         plot_rrt = self.rrt.plot_graph()
         cv.imshow("occupancy: " + str(self), transform_occ_img(plot_rrt))
-        cv.waitKey(1)
+        cv.waitKey(0)
 
     def step_action(self, obs, debug=False) -> np.ndarray:
         curr_pos = self.get_curr_posn()
@@ -91,7 +91,7 @@ class Drone:
         
         
          # if current and global goal position are same, increment the global goal position
-        if np.allclose(self.get_curr_posn(xyz=False), self.get_next_globalgoal_posn()):
+        if np.allclose(self.get_curr_posn(xyz=False), self.get_next_globalgoal_posn(), atol=5):
             logger.info(f"Drone {self.id} : Current and global goal position are same")
 
             if self.iter + 1 == len(self.global_path):

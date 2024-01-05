@@ -36,8 +36,8 @@ DEFAULT_CONTROL_FREQ_HZ = 48
 DEFAULT_DURATION_SEC = 2000
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
-NUM_OF_CYLLINDERS = 10
-AREA_SIZE = 10
+NUM_OF_CYLLINDERS = 100
+AREA_SIZE = 20
 GRID_SIZE = int(AREA_SIZE / 2)
 
 def run(
@@ -81,7 +81,7 @@ def run(
                    num_cylinders=num_cyllinders,
                    area_size=area_size
                    )
-    
+
     #### Get global path #######################################
     drone_paths = bfs_multi_drones(GRID_SIZE, num_drones)
     logger.info(f"Drone paths: {drone_paths}")
@@ -90,7 +90,7 @@ def run(
     drones = [Drone(
         id=i,
         env=env,
-        global_path=drone_paths[i+1], drone_model=drone, stub=False
+        global_path=drone_paths[i + 1], drone_model=drone, stub=False
     ) for i in range(num_drones)]
 
     occ_map = create_occ_map(env.world_map, env.drone_obs_matrix)
@@ -98,18 +98,19 @@ def run(
         drone.update(occ_map)
 
     #### Run the simulation ####################################
-    action = np.zeros((num_drones, 4)) # rpms for every motor    
+    action = np.zeros((num_drones, 4))  # rpms for every motor
 
     try:
         for i in range(0, int(duration_sec * env.CTRL_FREQ)):
             obs, reward, terminated, truncated, info = env.step(action)
             for drone in drones:
-                action[drone.id,:] = drone.step_action(obs[drone.id], debug=False)
+                action[drone.id, :] = drone.step_action(obs[drone.id], debug=False)
     except Exception as e:
         logger.error(e)
         # pdb.set_trace()
 
     env.close()
+
 
 if __name__ == '__main__':
     run()

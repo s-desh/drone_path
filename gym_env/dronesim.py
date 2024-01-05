@@ -9,6 +9,7 @@ import cv2 as cv
 from RRT import *
 from controlenv import CtrlAviary
 from enums import DroneModel, Physics
+from tqdm import tqdm
 
 HEIGHT_DIFF = .1  # Height difference between nodes
 
@@ -34,6 +35,8 @@ class DroneSim(CtrlAviary):
                  output_folder='results',
                  num_cylinders=10,  # Control number of cylinders to be made,
                  area_size=5.0,  # Area of the environment for our use case.
+                 detect_obstacle=False
+                 # If false, all obstacles known to drone, else drone detects obstacle in _detect_obstacles method.
                  ):
         """Initialization of an aviary environment for control applications.
 
@@ -77,10 +80,28 @@ class DroneSim(CtrlAviary):
         self.height_cyl = 2.0
         self.obstacle_detect_threshold = 0.5
         self.cylinder_posns = None
+        self.detect_obstacle = detect_obstacle
 
         if initial_xyzs is None:
             initial_xyzs, self.cylinder_posns = self.create_env(num_drones, num_cylinders)
             initial_rpys = np.zeros_like(initial_xyzs)
+
+        self.drone_size = (.06 * 1.15, .025)  # in meters. Represented as cylinder (radius * additional space & height)
+        self.drone_size_reduced = (.06 * 1.05, .025)
+        self.drone_obs_matrix = np.zeros(
+            (int(self.drone_size[0] * 2 * self.resolution), int(self.drone_size[0] * 2 * self.resolution)),
+            dtype=np.uint8)
+        self.drone_obs_matrix_red = np.zeros(
+            (int(self.drone_size[0] * 2 * self.resolution), int(self.drone_size[0] * 2 * self.resolution)),
+            dtype=np.uint8)
+        cv.circle(self.drone_obs_matrix,
+                  (int(self.drone_size[0] * self.resolution), int(self.drone_size[0] * self.resolution)),
+                  int(self.drone_size[0] * self.resolution), 255, -1)
+        cv.circle(self.drone_obs_matrix_red,
+                  (
+                      int(self.drone_size_reduced[0] * self.resolution),
+                      int(self.drone_size_reduced[0] * self.resolution)),
+                  int(self.drone_size_reduced[0] * self.resolution), 255, -1)
 
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
@@ -96,21 +117,7 @@ class DroneSim(CtrlAviary):
                          user_debug_gui=user_debug_gui,
                          output_folder=output_folder,
                          )
-        self.drone_size = \
-            (.06 * 1.15, .025)  # in meters. Represented as a cylinder (radius * additional space and height)
-        self.drone_size_reduced = (.06 * 1.05, .025)
-        self.drone_obs_matrix = np.zeros(
-            (int(self.drone_size[0] * 2 * self.resolution), int(self.drone_size[0] * 2 * self.resolution)),
-            dtype=np.uint8)
-        self.drone_obs_matrix_red = np.zeros(
-            (int(self.drone_size[0] * 2 * self.resolution), int(self.drone_size[0] * 2 * self.resolution)),
-            dtype=np.uint8)
-        cv.circle(self.drone_obs_matrix,
-                  (int(self.drone_size[0] * self.resolution), int(self.drone_size[0] * self.resolution)),
-                  int(self.drone_size[0] * self.resolution), 255, -1)
-        cv.circle(self.drone_obs_matrix_red,
-                  (int(self.drone_size_reduced[0] * self.resolution), int(self.drone_size_reduced[0] * self.resolution)),
-                  int(self.drone_size_reduced[0] * self.resolution), 255, -1)
+        return
 
     def meter_to_world_map(self, value):
         if isinstance(value, float):
@@ -127,7 +134,7 @@ class DroneSim(CtrlAviary):
 
     def world_map_to_meter(self, value):
         if isinstance(value, np.int64):
-            return value / self.resolution - self.area_size/2
+            return value / self.resolution - self.area_size / 2
         elif isinstance(value, np.ndarray):
             value_shape = value.shape
             value_flatten = value.flatten()
@@ -162,34 +169,40 @@ class DroneSim(CtrlAviary):
         drone_nodes_xyz = np.hstack(
             [drone_nodes, (np.arange(num_of_drones) + 1).reshape((num_of_drones, 1)) * HEIGHT_DIFF])
         cylinder_nodes_xyz = np.hstack([cylinder_nodes, np.ones((num_of_cylinders, 1)) * 1.1])
+        print("Environment Planning complete")
         return drone_nodes_xyz, cylinder_nodes_xyz
 
     def _detectObstacles(self):
-        # obstacle detection based on current postion of drones, runs after every step
-        thresh = self.obstacle_detect_threshold
+        if self.detect_obstacle:
+            # obstacle detection based on current postion of drones, runs after every step
+            thresh = self.obstacle_detect_threshold
 
-        # print(self.cylinder_object_ids)
+            # print(self.cylinder_object_ids)
 
-        for obsid in self.cylinder_object_ids:
-            pos, orient = p.getBasePositionAndOrientation(obsid, physicsClientId=self.CLIENT)
-            x, y, z = pos
+            for obsid in self.cylinder_object_ids:
+                pos, orient = p.getBasePositionAndOrientation(obsid, physicsClientId=self.CLIENT)
+                x, y, z = pos
 
-            for drone in range(self.NUM_DRONES):
-                # dist b/w drone and obs
-                dist = np.sqrt(np.sum(np.square(self.pos[drone, :] - pos)))
+                for drone in range(self.NUM_DRONES):
+                    # dist b/w drone and obs
+                    dist = np.sqrt(np.sum(np.square(self.pos[drone, :] - pos)))
 
-                if (dist < thresh) and (obsid not in self.detected_object_ids):
-                    self.detected_object_ids.append(obsid)
-                    cv.circle(self.world_map, (self.meter_to_world_map(x), self.meter_to_world_map(y)),
-                              int(self.radius_cyl * self.resolution), 255, -1)
-                    # one drone can only be close to one cylinder below the thresh
-                    continue
-
-        # cv.imshow("occupancy", self.world_map.T)
-        #
-        # key = cv.waitKey(100)
-        # if key == ord('q'):
-        #     cv.destroyAllWindows()
+                    if (dist < thresh) and (obsid not in self.detected_object_ids):
+                        self.detected_object_ids.append(obsid)
+                        cv.circle(self.world_map, (self.meter_to_world_map(x), self.meter_to_world_map(y)),
+                                  int(self.radius_cyl * self.resolution), 255, -1)
+                        # one drone can only be close to one cylinder below the thresh
+                        continue
+            self.occ_map = create_occ_map(self.world_map, self.drone_obs_matrix)
+            # cv.imshow("occupancy", self.world_map.T)
+            #
+            # key = cv.waitKey(100)
+            # if key == ord('q'):
+            #     cv.destroyAllWindows()
+        else:
+            pass
+            # Do nothing
+        return
 
     def check_collision_before_spawn(self, x, y, z, radius, height):
         # Check for collisions with existing cylinders
@@ -214,7 +227,7 @@ class DroneSim(CtrlAviary):
 
         """
         if self.cylinder_posns is None:
-            for _ in range(self.num_cylinders):
+            for _ in tqdm(range(self.num_cylinders), "Spawning cylinders"):
                 while True:
                     # Random position within the area
                     x_cyl = random.uniform(-self.area_size / 2, self.area_size / 2)
@@ -233,10 +246,9 @@ class DroneSim(CtrlAviary):
                                                            p.getQuaternionFromEuler([0, 0, 0]),
                                                            physicsClientId=self.CLIENT
                                                            ))
-                # todo: comment the line below
-                cv.circle(self.world_map, (self.meter_to_world_map(x_cyl), self.meter_to_world_map(y_cyl)),
-                          int(radius_cyl * self.resolution), 255, -1)
-            return
+                if not self.detect_obstacle:
+                    cv.circle(self.world_map, (self.meter_to_world_map(x_cyl), self.meter_to_world_map(y_cyl)),
+                              int(radius_cyl * self.resolution), 255, -1)
 
         else:
             for posn in self.cylinder_posns:
@@ -245,6 +257,10 @@ class DroneSim(CtrlAviary):
                                                            p.getQuaternionFromEuler([0, 0, 0]),
                                                            physicsClientId=self.CLIENT
                                                            ))
-                # todo: comment the line below
-                cv.circle(self.world_map, (self.meter_to_world_map(posn[0]), self.meter_to_world_map(posn[1])),
-                          int(self.radius_cyl * self.resolution), 255, -1)
+                if not self.detect_obstacle:
+                    cv.circle(self.world_map, (self.meter_to_world_map(posn[0]), self.meter_to_world_map(posn[1])),
+                              int(self.radius_cyl * self.resolution), 255, -1)
+
+        self.occ_map = create_occ_map(self.world_map, self.drone_obs_matrix)
+        print("Obstacles Added")
+        return
