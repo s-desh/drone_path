@@ -19,6 +19,10 @@ class Drone:
 
     def get_next_globalgoal_posn(self, meter_to_world=True):
         # TODO: check if obstacle is present in the next global goal position
+        for i in range(self.iter, len(self.global_path)):
+            if self.env.occ_map[int(self.global_path[i][1]), int(self.global_path[i][0])] == 0:
+                self.iter = i
+                break
         goal_posn = self.global_path[self.iter]
         if meter_to_world and not self.stub:
             goal_posn = self.env.meter_to_world_map(np.array([goal_posn[0], goal_posn[1]]))              
