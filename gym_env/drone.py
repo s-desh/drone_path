@@ -54,7 +54,7 @@ class Drone:
         cx, cy = start[0], start[1]
         gx, gy = gaol[0], gaol[1]
         window_size = max(abs(gx - cx), abs(gy - cy))
-        buffer = 20
+        buffer = 100
         x_max = min(cx + window_size + buffer, self.env.occ_map.shape[0])
         y_max = min(cy + window_size + buffer, self.env.occ_map.shape[1])
         x_min = max(0, cx - window_size - buffer)

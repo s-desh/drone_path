@@ -90,7 +90,7 @@ def run(
     drones = [Drone(
         id=i,
         env=env,
-        global_path=drone_paths[i + 1], drone_model=drone, stub=True
+        global_path=drone_paths[i + 1], drone_model=drone, stub=False
     ) for i in range(num_drones)]
 
     occ_map = create_occ_map(env.world_map, env.drone_obs_matrix)

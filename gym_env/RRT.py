@@ -178,7 +178,7 @@ class RRTStar:
     def random_point(self):
         while True:
             ind = []
-            shape = self.occ_map.shape
+            shape = self.occ_map.shape[::-1]
             for dim in shape:
                 ind.append(np.random.randint(0, dim))
             if self.occ_map[ind[1], ind[0]] == 0:
