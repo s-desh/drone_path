@@ -49,6 +49,10 @@ class Node:
         self.parent_node = None
         self.child_nodes = []
 
+    def __del__(self):
+        if self.parent_node:
+            self.parent_node.child_nodes.remove(self)
+
     def __sub__(self, other):
         return np.sqrt(np.sum((self.posn - other.posn) ** 2))
 
@@ -356,8 +360,8 @@ def RRT_start():
     is_obst = rrt.occ_map[on_obst.posn[0], on_obst.posn[1]] != 0
 
     # Obstacle intersects path
-    # cv.circle(occ_map, center=(250, 250), radius=40, thickness=-1, color=255)
-    # cv.circle(out_img, center=(250, 250), radius=40, thickness=-1, color=(255, 0, 0))
+    cv.circle(occ_map, center=(250, 250), radius=60, thickness=-1, color=255)
+    cv.circle(out_img, center=(250, 250), radius=60, thickness=-1, color=(255, 0, 0))
 
     # Obstacle won't intersect path
     # cv.circle(occ_map, center=(750, 750), radius=40, thickness=-1, color=255)
