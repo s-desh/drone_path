@@ -25,7 +25,7 @@ class Drone:
         # self.get_next_globalgoal_posn = None
         logger.info("Drone {} initialized".format(self.id))
 
-    def get_next_globalgoal_posn(self, meter_to_world=True, local_coordinates=False):
+    def get_next_globalgoal_posn(self, meter_to_world=True):
         for i in range(self.iter, len(self.global_path)):
             goal_posn = self.global_path[i]
             if not self.stub:
@@ -97,7 +97,7 @@ class Drone:
             goal_posn = self.last_goal_posn
         else:
             self.last_goal_posn = goal_posn
-        goal_posn_mtr = self.env.world_map_to_meter(goal_posn.astype(np.int64))
+        goal_posn_mtr = self.env.world_map_to_meter(goal_posn.astype(np.int64) + self.local_origin.astype(np.int64))
         target_drone_xyz = np.array([goal_posn_mtr[0], goal_posn_mtr[1], self.get_curr_posn(meter_to_world=False)[2]])
         target_drone_rpy = self.env.rpy[self.id, :]
         action, _, _ = self.control.computeControlFromState(control_timestep=self.env.CTRL_TIMESTEP,
