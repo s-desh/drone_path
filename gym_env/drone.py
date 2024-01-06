@@ -19,6 +19,8 @@ class Drone:
         self.iter = 0
         self.stub = stub
         self.local_start_posn = None
+        self.local_goal_posn = None
+        self.local_origin = None
         # self.get_next_globalgoal_posn = None
         logger.info("Drone {} initialized".format(self.id))
 
@@ -45,19 +47,24 @@ class Drone:
             posn = self.env.meter_to_world_map(posn)
         return posn
     
-    def get_local_occmap(self, occ_map):
+    def get_local_occmap(self, occ_map, start, gaol):
         # raise NotImplementedError()
         # not being used
         # get new local occupancy map based on current position
-        cx, cy = self.get_curr_posn(xyz=False)
-        self.local_start_posn = np.array([cx, cy])
-        gx, gy = self.get_next_globalgoal_posn()
+        # cx, cy = self.get_curr_posn(xyz=False)
+        cx, cy = start[0], start[1]
+        # gx, gy = self.get_next_globalgoal_posn()
+        gx, gy = gaol[0], gaol[1]
         window_size = max(abs(gx - cx), abs(gy - cy))
         buffer = 10
         x_max = min(cx + window_size + buffer, self.env.occ_map.shape[0])
         y_max = min(cy + window_size + buffer, self.env.occ_map.shape[1])
         x_min = max(0, cx - window_size - buffer)
         y_min = max(0, cy - window_size - buffer)
+        self.local_start_posn = np.array([cx - x_min, cy - y_min])
+        self.local_goal_posn = np.array([gx - x_min, gy - y_min])
+        self.local_origin = np.array([x_min, y_min])
+        logger.info(f"Drone {self.id} : Local occupancy map window: {x_min, x_max, y_min, y_max}")
         local_occ_map = occ_map[int(x_min):int(x_max), int(y_min):int(y_max)]
         logger.info(f"Drone {self.id} : Local occupancy map shape: {local_occ_map.shape}")
         return local_occ_map
@@ -68,11 +75,16 @@ class Drone:
         next_global_goal_posn = self.get_next_globalgoal_posn()
         logger.info(f"Drone {self.id} : Next global goal position for drone {next_global_goal_posn}")
         # self.rrt = RRTStar(occ_map, self.get_curr_posn(xyz=False), next_global_goal_posn, 20, 5000, True, self.id)
-        self.rrt = RRTStar(self.get_local_occmap(occ_map), self.get_curr_posn(xyz=False) - self.local_start_posn, next_global_goal_posn - self.get_curr_posn(xyz=False), 20, 5000, True, self.id)
+        local_occ_map = self.get_local_occmap(occ_map, self.get_curr_posn(xyz=False), next_global_goal_posn)
+
+        logger.info(f"start posn local {self.local_start_posn}")
+        logger.info(f"goal posn local {self.local_goal_posn}")
+
+        self.rrt = RRTStar(local_occ_map, self.local_start_posn, self.local_goal_posn, 20, 5000, True, self.id)
         logger.info(f"Drone {self.id} : Finding path ... ")
         _ = self.rrt.find_path()
         newocc_map = create_occ_map(self.env.world_map, self.env.drone_obs_matrix_red)
-        self.rrt.update_occmap(self.get_local_occmap(newocc_map))
+        self.rrt.update_occmap(self.get_local_occmap(newocc_map, self.get_curr_posn(xyz=False), next_global_goal_posn))
         plot_rrt = self.rrt.plot_graph()
         cv.imshow("occupancy: " + str(self.id), transform_occ_img(plot_rrt))
         cv.waitKey(0)
@@ -80,7 +92,8 @@ class Drone:
     def step_action(self, obs, debug=False) -> np.ndarray:
         # curr posn in local map
         # curr_pos = self.get_curr_posn()
-        curr_pos = self.get_curr_posn() - self.local_start_posn
+        logger.info("get realtive position")
+        curr_pos = self.get_curr_posn() - self.local_origin
         goal_posn = self.rrt.get_next_posn(curr_pos[:2])
         goal_posn_mtr = self.env.world_map_to_meter(goal_posn.astype(np.int64))
         target_drone_xyz = np.array([goal_posn_mtr[0], goal_posn_mtr[1], self.get_curr_posn(meter_to_world=False)[2]])
@@ -97,7 +110,7 @@ class Drone:
         
         
          # if current and global goal position are same, increment the global goal position
-        if np.allclose(self.get_curr_posn(xyz=False), self.get_next_globalgoal_posn(), atol=5):
+        if np.allclose(self.get_curr_posn(xyz=False), self.get_next_globalgoal_posn(), atol=3):
             logger.info(f"Drone {self.id} : Current and global goal position are same")
 
             if self.iter + 1 == len(self.global_path):

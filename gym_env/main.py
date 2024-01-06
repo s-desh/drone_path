@@ -95,6 +95,7 @@ def run(
 
     occ_map = create_occ_map(env.world_map, env.drone_obs_matrix)
     for drone in drones:
+        logger.info(f"update rrt for drone {drone.id}")
         drone.update(occ_map)
 
     #### Run the simulation ####################################
