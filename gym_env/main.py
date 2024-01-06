@@ -36,8 +36,8 @@ DEFAULT_CONTROL_FREQ_HZ = 48
 DEFAULT_DURATION_SEC = 2000
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
-NUM_OF_CYLLINDERS = 100
-AREA_SIZE = 20
+NUM_OF_CYLLINDERS = 10
+AREA_SIZE = 10
 GRID_SIZE = int(AREA_SIZE / 2)
 
 def run(
@@ -90,7 +90,7 @@ def run(
     drones = [Drone(
         id=i,
         env=env,
-        global_path=drone_paths[i + 1], drone_model=drone, stub=False
+        global_path=drone_paths[i + 1], drone_model=drone, stub=True
     ) for i in range(num_drones)]
 
     occ_map = create_occ_map(env.world_map, env.drone_obs_matrix)
@@ -104,7 +104,7 @@ def run(
         for i in range(0, int(duration_sec * env.CTRL_FREQ)):
             obs, reward, terminated, truncated, info = env.step(action)
             for drone in drones:
-                action[drone.id, :] = drone.step_action(obs[drone.id], debug=False)
+                action[drone.id, :] = drone.step_action(obs[drone.id], debug=True)
     except Exception as e:
         logger.error(e)
         # pdb.set_trace()
