@@ -274,30 +274,6 @@ class RRTStar:
             cv.circle(out_img, self.start.posn, node_radius, color=(0, 0, 255))
         return out_img
 
-    def check_path(self, fix_path=True):
-        # Check is path still valid and return True, else False
-        path = self.get_final_path(False)
-        if path:
-            for i in range(len(path) - 1):
-                _, coll = self.line_btw_nodes(path[i], path[i - 1])
-                if coll:
-                    self.print("Path broken by new obstacles")
-                    return False, None
-            return True, path
-        else:
-            return False
-
-    def control_drone(self, posn):
-        if self.path_found:
-            valid, path = self.check_path()
-            if valid:
-                posn_node = Node(posn, 0)
-                dist = path - posn_node
-                close_nodes = np.argwhere(dist < self.radius)
-                closest_node_arg = np.max(close_nodes)
-                return path[closest_node_arg].posn
-        return None
-
     def find_path(self):
         assert self.is_valid_config(), "RRT does not have valid configuration"
         if self.path_found:
@@ -330,9 +306,6 @@ class RRTStar:
                     if self.path_found:
                         return self.get_final_path()
         assert False, self.print("Path not found")
-
-    def fix_path(self, child, parent):
-        pass
 
     def get_next_posn(self, current_posn, ret_posn=True):
         current_posn = Node(current_posn, 0)
