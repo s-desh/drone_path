@@ -20,6 +20,7 @@ class Drone:
         self.stub = stub
         self.local_start_posn = None
         self.local_goal_posn = None
+        self.last_goal_posn = None
         self.local_origin = None
         # self.get_next_globalgoal_posn = None
         logger.info("Drone {} initialized".format(self.id))
@@ -86,11 +87,16 @@ class Drone:
         # cv.imshow("occupancy: " + str(self.id), transform_occ_img(plot_rrt))
         # cv.waitKey(0)
         logger.info(f"Drone {self.id} : RRT updated")
+        self.control.reset()
 
     def step_action(self, obs, debug=False) -> np.ndarray:
         # curr posn in local map
         curr_pos = self.get_curr_posn(xyz=False) - self.local_origin
         goal_posn = self.rrt.get_next_posn(curr_pos[:2])
+        if goal_posn is None:
+            goal_posn = self.last_goal_posn
+        else:
+            self.last_goal_posn = goal_posn
         goal_posn_mtr = self.env.world_map_to_meter(goal_posn.astype(np.int64))
         target_drone_xyz = np.array([goal_posn_mtr[0], goal_posn_mtr[1], self.get_curr_posn(meter_to_world=False)[2]])
         target_drone_rpy = self.env.rpy[self.id, :]
@@ -106,7 +112,7 @@ class Drone:
         
         
          # if current and global goal position are same, increment the global goal position
-        if np.allclose(self.get_curr_posn(xyz=False), self.get_next_globalgoal_posn()):
+        if np.allclose(self.get_curr_posn(xyz=False), self.get_next_globalgoal_posn(), atol=2):
             logger.info(f"Drone {self.id} : Current and global goal position are same")
 
             if self.iter + 1 == len(self.global_path):
