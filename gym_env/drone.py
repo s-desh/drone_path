@@ -18,6 +18,7 @@ class Drone:
         self.control = DSLPIDControl(drone_model=drone_model)
         self.iter = 0
         self.stub = stub
+        self.rrt = None
         self.local_start_posn = None
         self.local_goal_posn = None
         self.last_goal_posn = None
@@ -76,11 +77,11 @@ class Drone:
         logger.info(f"start posn local {self.local_start_posn}")
         logger.info(f"goal posn local {self.local_goal_posn}")
 
-        self.rrt = RRTStar(local_occ_map, self.local_start_posn, self.local_goal_posn, 20, 5000, True, self.id)
+        self.rrt = RRTStar(local_occ_map.copy(), self.local_start_posn, self.local_goal_posn, 20, 5000, True, self.id)
         logger.info(f"Drone {self.id} : Finding path ... ")
         _ = self.rrt.find_path()
         newocc_map = create_occ_map(self.env.world_map, self.env.drone_obs_matrix_red)
-        self.rrt.update_occmap(self.get_local_occmap(newocc_map, self.get_curr_posn(xyz=False), next_global_goal_posn))
+        self.rrt.update_occmap(self.get_local_occmap(newocc_map, self.get_curr_posn(xyz=False), next_global_goal_posn).copy())
         plot_rrt = self.rrt.plot_graph()
         cv.imwrite(f"rrt_{self.iter}.png", transform_occ_img(plot_rrt))
         # threading error
