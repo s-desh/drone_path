@@ -24,7 +24,7 @@ from log_config import setup_logger
 logger = setup_logger(__name__)
 
 DEFAULT_DRONES = DroneModel("cf2x")
-DEFAULT_NUM_DRONES = 2
+DEFAULT_NUM_DRONES = 1
 DEFAULT_PHYSICS = Physics("pyb")
 DEFAULT_GUI = True
 DEFAULT_RECORD_VISION = False
@@ -38,7 +38,7 @@ DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 NUM_OF_CYLLINDERS = 10
 AREA_SIZE = 10
-GRID_SIZE = int(AREA_SIZE / 2)
+GRID_SIZE = int(AREA_SIZE / 1)
 
 def run(
         drone=DEFAULT_DRONES,
@@ -107,8 +107,8 @@ def run(
             for drone in drones:
                 action[drone.id, :] = drone.step_action(obs[drone.id], debug=True)
     except Exception as e:
-        logger.error(e)
-        # pdb.set_trace()
+        logger.exception(e)
+        raise
 
     env.close()
 
