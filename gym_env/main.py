@@ -1,30 +1,19 @@
-import os
-import time
-import argparse
-from datetime import datetime
-import pdb
-import math
-import random
-
 import numpy as np
-import pybullet as p
-import matplotlib.pyplot as plt
-import cv2 as cv
 
-from enums import Physics
-from dronesim import DroneSim
-from RRT import RRTStar, create_occ_map, transform_occ_img
-from global_planner import bfs_multi_drones
+from utils.enums import Physics
+from env.dronesim import DroneSim
+from planner.RRT import create_occ_map
+from planner.global_planner import bfs_multi_drones
 
 from control.DSLPIDControl import DSLPIDControl
-from enums import DroneModel
-from drone import Drone
-from log_config import setup_logger
+from utils.enums import DroneModel
+from control.drone import Drone
+from utils.log_config import setup_logger, clear_logs
 
 logger = setup_logger(__name__)
 
 DEFAULT_DRONES = DroneModel("cf2x")
-DEFAULT_NUM_DRONES = 2
+DEFAULT_NUM_DRONES = 1
 DEFAULT_PHYSICS = Physics("pyb")
 DEFAULT_GUI = True
 DEFAULT_RECORD_VISION = False
@@ -117,4 +106,5 @@ def run(
 
 
 if __name__ == '__main__':
+    clear_logs()
     run()

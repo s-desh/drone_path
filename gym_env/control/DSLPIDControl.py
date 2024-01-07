@@ -4,7 +4,7 @@ import pybullet as p
 from scipy.spatial.transform import Rotation
 
 from control.BaseControl import BaseControl
-from enums import DroneModel
+from utils.enums import DroneModel
 
 class DSLPIDControl(BaseControl):
     """PID control class for Crazyflies.

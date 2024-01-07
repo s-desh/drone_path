@@ -3,7 +3,7 @@ import numpy as np
 import xml.etree.ElementTree as etxml
 import pkg_resources
 
-from enums import DroneModel
+from utils.enums import DroneModel
 
 class BaseControl(object):
     """Base class for control.
@@ -200,7 +200,7 @@ class BaseControl(object):
         #### Get the XML tree of the drone model to control ########
         URDF = self.DRONE_MODEL.value + ".urdf"
         # path = pkg_resources.resource_filename(__name__,'assets/'+URDF)
-        path = os.path.join('assets', URDF)
+        path = os.path.join('gym_env/assets', URDF)
         URDF_TREE = etxml.parse(path).getroot()
         #### Find and return the desired parameter #################
         if parameter_name == 'm':

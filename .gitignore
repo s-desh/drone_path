@@ -3,3 +3,5 @@ drone-env
 todo
 gym-pybullet-drones
 gym_env/__pycache__
+gym_env/*/__pycache__
+logs
