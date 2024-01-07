@@ -15,6 +15,7 @@ from enums import Physics
 from dronesim import DroneSim
 from RRT import RRTStar, create_occ_map, transform_occ_img
 from global_planner import bfs_multi_drones
+from global_planner2 import global_path
 
 from control.DSLPIDControl import DSLPIDControl
 from enums import DroneModel
@@ -24,7 +25,7 @@ from log_config import setup_logger
 logger = setup_logger(__name__)
 
 DEFAULT_DRONES = DroneModel("cf2x")
-DEFAULT_NUM_DRONES = 2
+DEFAULT_NUM_DRONES = 5
 DEFAULT_PHYSICS = Physics("pyb")
 DEFAULT_GUI = True
 DEFAULT_RECORD_VISION = False
@@ -37,9 +38,9 @@ DEFAULT_DURATION_SEC = 2000
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 DETECT_OBSTACLE = False
-NUM_OF_CYLLINDERS = 50
-AREA_SIZE = 10
-GRID_SIZE = int(AREA_SIZE / 1)
+NUM_OF_CYLLINDERS = 200
+AREA_SIZE = 30
+GRID_SIZE = int(AREA_SIZE / 3)
 
 def run(
         drone=DEFAULT_DRONES,
@@ -86,7 +87,7 @@ def run(
                    )
 
     #### Get global path #######################################
-    drone_paths = bfs_multi_drones(GRID_SIZE, num_drones)
+    path_plan, drone_paths = global_path(GRID_SIZE, num_drones)
     logger.info(f"Drone paths: {drone_paths}")
 
     #### Initialize drones #####################################
