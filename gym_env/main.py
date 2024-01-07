@@ -10,6 +10,7 @@ from utils.enums import DroneModel
 from control.drone import Drone
 from utils.log_config import setup_logger, clear_logs
 
+clear_logs()
 logger = setup_logger(__name__)
 
 DEFAULT_DRONES = DroneModel("cf2x")
@@ -106,5 +107,4 @@ def run(
 
 
 if __name__ == '__main__':
-    clear_logs()
     run()
