@@ -35,8 +35,9 @@ class DroneSim(CtrlAviary):
                  output_folder='results',
                  num_cylinders=10,  # Control number of cylinders to be made,
                  area_size=5.0,  # Area of the environment for our use case.
-                 detect_obstacle=False
+                 detect_obstacle=False,
                  # If false, all obstacles known to drone, else drone detects obstacle in _detect_obstacles method.
+                 show_progress=True
                  ):
         """Initialization of an aviary environment for control applications.
 
@@ -73,19 +74,21 @@ class DroneSim(CtrlAviary):
         self.area_size = area_size
         self.cylinder_object_ids = []  # Required to track the position of cylinders.
         self.resolution = 100  # 1 meter equals 100 pixels on map
-        self.world_map = np.zeros((area_size * self.resolution, area_size * self.resolution),
-                                  dtype=np.uint8)  # Track obstacles. 0 -> Free space; 1 -> obstacle
+
         self.detected_object_ids = []
         self.radius_cyl = 0.5
         self.height_cyl = 2.0
         self.obstacle_detect_threshold = 0.5
         self.cylinder_posns = None
         self.detect_obstacle = detect_obstacle
+        self.show_progress = show_progress
+        self.color_progress = [(0, int(x), int(x)) for x in np.linspace(100, 200, num_drones)]
 
         if initial_xyzs is None:
             initial_xyzs, self.cylinder_posns = self.create_env(num_drones, num_cylinders)
             initial_rpys = np.zeros_like(initial_xyzs)
 
+        # For OCC map
         self.drone_size = (.06 * 1.15, .025)  # in meters. Represented as cylinder (radius * additional space & height)
         self.drone_size_reduced = (.06 * 1.05, .025)
         self.drone_obs_matrix = np.zeros(
@@ -102,6 +105,14 @@ class DroneSim(CtrlAviary):
                       int(self.drone_size_reduced[0] * self.resolution),
                       int(self.drone_size_reduced[0] * self.resolution)),
                   int(self.drone_size_reduced[0] * self.resolution), 255, -1)
+
+        self.world_map_hidden = np.zeros((area_size * self.resolution, area_size * self.resolution),
+                                         dtype=np.uint8)  # Track obstacles. 0 -> Free space; 1 -> obstacle
+        self.occ_map_red = None  # For control
+        self.occ_map = None  # For finding path
+        self.occ_map_red_hidden = None  # For control
+        self.occ_map_hidden = None  # All obstacles
+        self.progress_map = None
 
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
@@ -173,35 +184,33 @@ class DroneSim(CtrlAviary):
         return drone_nodes_xyz, cylinder_nodes_xyz
 
     def _detectObstacles(self):
+        thresh = self.obstacle_detect_threshold
         if self.detect_obstacle:
-            # obstacle detection based on current postion of drones, runs after every step
-            thresh = self.obstacle_detect_threshold
+            for drone in range(self.NUM_DRONES):
+                pos = self.pos[drone, :2]
+                min_x, max_x = np.clip(self.meter_to_world_map(pos[1] - thresh), 0, self.occ_map_hidden.shape[1]), \
+                               np.clip(self.meter_to_world_map(pos[1] + thresh), 0, self.occ_map_hidden.shape[1])
+                min_y, max_y = np.clip(self.meter_to_world_map(pos[0] - thresh), 0, self.occ_map_hidden.shape[0]), \
+                               np.clip(self.meter_to_world_map(pos[0] + thresh), 0, self.occ_map_hidden.shape[0])
 
-            # print(self.cylinder_object_ids)
+                self.occ_map[min_x: max_x, min_y: max_y] = self.occ_map_hidden[min_x: max_x, min_y: max_y]
+                self.occ_map_red[min_x: max_x, min_y: max_y] = self.occ_map_red_hidden[min_x: max_x, min_y: max_y]
 
-            for obsid in self.cylinder_object_ids:
-                pos, orient = p.getBasePositionAndOrientation(obsid, physicsClientId=self.CLIENT)
-                x, y, z = pos
-
-                for drone in range(self.NUM_DRONES):
-                    # dist b/w drone and obs
-                    dist = np.sqrt(np.sum(np.square(self.pos[drone, :] - pos)))
-
-                    if (dist < thresh) and (obsid not in self.detected_object_ids):
-                        self.detected_object_ids.append(obsid)
-                        cv.circle(self.world_map, (self.meter_to_world_map(x), self.meter_to_world_map(y)),
-                                  int(self.radius_cyl * self.resolution), 255, -1)
-                        # one drone can only be close to one cylinder below the thresh
-                        continue
-            self.occ_map = create_occ_map(self.world_map, self.drone_obs_matrix)
-            # cv.imshow("occupancy", self.world_map.T)
-            #
-            # key = cv.waitKey(100)
-            # if key == ord('q'):
-            #     cv.destroyAllWindows()
+            cv.imshow("occ_map", self.occ_map)
+            cv.imshow("occ_map_hidden", self.occ_map_hidden)
         else:
             pass
             # Do nothing
+        if self.show_progress:
+            for drone in range(self.NUM_DRONES):
+                pos = self.pos[drone, :2]
+                curr_drone_pos = self.meter_to_world_map(pos)
+                cv.circle(self.progress_map, curr_drone_pos, radius=1, color=self.color_progress[drone], thickness=-1)
+            cv.imshow("preview_map", self.progress_map)
+
+        key = cv.waitKey(1)
+        if key == ord('q'):
+            cv.destroyAllWindows()
         return
 
     def check_collision_before_spawn(self, x, y, z, radius, height):
@@ -246,8 +255,7 @@ class DroneSim(CtrlAviary):
                                                            p.getQuaternionFromEuler([0, 0, 0]),
                                                            physicsClientId=self.CLIENT
                                                            ))
-                if not self.detect_obstacle:
-                    cv.circle(self.world_map, (self.meter_to_world_map(x_cyl), self.meter_to_world_map(y_cyl)),
+                cv.circle(self.world_map_hidden, (self.meter_to_world_map(x_cyl), self.meter_to_world_map(y_cyl)),
                               int(radius_cyl * self.resolution), 255, -1)
 
         else:
@@ -257,10 +265,18 @@ class DroneSim(CtrlAviary):
                                                            p.getQuaternionFromEuler([0, 0, 0]),
                                                            physicsClientId=self.CLIENT
                                                            ))
-                if not self.detect_obstacle:
-                    cv.circle(self.world_map, (self.meter_to_world_map(posn[0]), self.meter_to_world_map(posn[1])),
+                cv.circle(self.world_map_hidden, (self.meter_to_world_map(posn[0]), self.meter_to_world_map(posn[1])),
                               int(self.radius_cyl * self.resolution), 255, -1)
 
-        self.occ_map = create_occ_map(self.world_map, self.drone_obs_matrix)
+        self.occ_map_hidden = create_occ_map(self.world_map_hidden, self.drone_obs_matrix)
+        self.occ_map_red_hidden = create_occ_map(self.world_map_hidden, self.drone_obs_matrix_red)
+        if not self.detect_obstacle:
+            self.occ_map = self.occ_map_hidden
+            self.occ_map_red = self.occ_map_red_hidden
+        else:
+            self.occ_map = np.zeros_like(self.occ_map_hidden)
+            self.occ_map_red = np.zeros_like(self.occ_map_red_hidden)
+        self.progress_map = np.zeros(list(self.world_map_hidden.shape) + [3])
+        self.progress_map[:, :, 0] = self.world_map_hidden
         print("Obstacles Added")
         return

@@ -154,13 +154,16 @@ class RRTStar:
         return
 
     def remove_node(self, node: Node):
-        self.graph.remove_node(node.id)  # Removes edges too
-        for child in node.child_nodes:
-            self.prune_graph(child, True)
-        if node == self.goal:
-            node.cost = np.inf
-        else:
-            del node
+        try:
+            self.graph.remove_node(node.id)  # Removes edges too
+            for child in node.child_nodes:
+                self.prune_graph(child, True)
+            if node == self.goal:
+                node.cost = np.inf
+            else:
+                del node
+        except nx.NetworkXError:
+            pass
         return
 
     def add_edge(self, parent: Node, child: Node):

@@ -36,8 +36,8 @@ DEFAULT_CONTROL_FREQ_HZ = 48
 DEFAULT_DURATION_SEC = 2000
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
-DETECT_OBSTACLE = True
-NUM_OF_CYLLINDERS = 10
+DETECT_OBSTACLE = False
+NUM_OF_CYLLINDERS = 50
 AREA_SIZE = 10
 GRID_SIZE = int(AREA_SIZE / 1)
 
@@ -96,10 +96,9 @@ def run(
         global_path=drone_paths[i + 1], drone_model=drone, stub=False
     ) for i in range(num_drones)]
 
-    occ_map = create_occ_map(env.world_map, env.drone_obs_matrix)
     for drone in drones:
         logger.info(f"update rrt for drone {drone.id}")
-        drone.update(occ_map)
+        drone.update()
 
     #### Run the simulation ####################################
     action = np.zeros((num_drones, 4))  # rpms for every motor
