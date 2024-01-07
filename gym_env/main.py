@@ -7,7 +7,7 @@ from planner.global_planner import bfs_multi_drones
 
 from control.DSLPIDControl import DSLPIDControl
 from utils.enums import DroneModel
-from control.drone import Drone
+from drone import Drone
 from utils.log_config import setup_logger, clear_logs
 
 clear_logs()
