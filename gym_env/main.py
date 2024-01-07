@@ -24,7 +24,7 @@ from log_config import setup_logger
 logger = setup_logger(__name__)
 
 DEFAULT_DRONES = DroneModel("cf2x")
-DEFAULT_NUM_DRONES = 1
+DEFAULT_NUM_DRONES = 2
 DEFAULT_PHYSICS = Physics("pyb")
 DEFAULT_GUI = True
 DEFAULT_RECORD_VISION = False
@@ -36,6 +36,7 @@ DEFAULT_CONTROL_FREQ_HZ = 48
 DEFAULT_DURATION_SEC = 2000
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
+DETECT_OBSTACLE = True
 NUM_OF_CYLLINDERS = 10
 AREA_SIZE = 10
 GRID_SIZE = int(AREA_SIZE / 1)
@@ -55,7 +56,8 @@ def run(
         output_folder=DEFAULT_OUTPUT_FOLDER,
         colab=DEFAULT_COLAB,
         num_cyllinders=NUM_OF_CYLLINDERS,
-        area_size=AREA_SIZE
+        area_size=AREA_SIZE,
+        detect_obstacle=DETECT_OBSTACLE
 ):
     #### Initialize the simulation #############################
     H = .1
@@ -79,7 +81,8 @@ def run(
                    obstacles=obstacles,
                    user_debug_gui=user_debug_gui,
                    num_cylinders=num_cyllinders,
-                   area_size=area_size
+                   area_size=area_size,
+                   detect_obstacle=detect_obstacle
                    )
 
     #### Get global path #######################################
