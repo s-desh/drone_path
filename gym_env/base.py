@@ -5,6 +5,7 @@ import collections
 from datetime import datetime
 import xml.etree.ElementTree as etxml
 import pkg_resources
+import pybullet
 from PIL import Image
 # import pkgutil
 # egl = pkgutil.get_loader('eglRenderer')
@@ -518,10 +519,14 @@ class BaseAviary(gym.Env):
         and improve performance (at the expense of memory).
 
         """
-        for i in range (self.NUM_DRONES):
-            self.pos[i], self.quat[i] = p.getBasePositionAndOrientation(self.DRONE_IDS[i], physicsClientId=self.CLIENT)
-            self.rpy[i] = p.getEulerFromQuaternion(self.quat[i])
-            self.vel[i], self.ang_v[i] = p.getBaseVelocity(self.DRONE_IDS[i], physicsClientId=self.CLIENT)
+        try:
+            for i in range (self.NUM_DRONES):
+                self.pos[i], self.quat[i] = p.getBasePositionAndOrientation(self.DRONE_IDS[i], physicsClientId=self.CLIENT)
+                self.rpy[i] = p.getEulerFromQuaternion(self.quat[i])
+                self.vel[i], self.ang_v[i] = p.getBaseVelocity(self.DRONE_IDS[i], physicsClientId=self.CLIENT)
+        except pybullet.error:
+            time.sleep(0.1)
+            self._updateAndStoreKinematicInformation()
 
     ################################################################################
 

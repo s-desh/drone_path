@@ -74,14 +74,6 @@ class CtrlAviary(BaseAviary):
                          user_debug_gui=user_debug_gui,
                          output_folder=output_folder,
                          )
-        self.drone_size = (.06*1.15, .025)  # in meters. Represented as a cylinder (radius * additional space and height)
-        self.drone_obs_matrix = np.zeros((int(self.drone_size[0]*2*self.resolution), int(self.drone_size[0]*2*self.resolution)), dtype=np.uint8)
-        cv.circle(self.drone_obs_matrix,
-                  (int(self.drone_size[0]*self.resolution), int(self.drone_size[0]*self.resolution)),
-                  int(self.drone_size[0]*self.resolution), 255, -1)
-
-        self.occ_map = create_occ_map(self.world_map, self.drone_obs_matrix)
-        out = test_occ_map(self.occ_map, self.world_map)
         return
 
     ################################################################################

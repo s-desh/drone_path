@@ -49,6 +49,10 @@ class Node:
         self.parent_node = None
         self.child_nodes = []
 
+    def __del__(self):
+        if self.parent_node:
+            self.parent_node.child_nodes.remove(self)
+
     def __sub__(self, other):
         return np.sqrt(np.sum((self.posn - other.posn) ** 2))
 
@@ -109,7 +113,37 @@ class RRTStar:
         print("Drone ", self.drone_id, ": ", val)
 
     def update_occmap(self, new_occmap):
+        union = np.bitwise_or(self.occ_map, new_occmap)
+        diff = union - self.occ_map
+        new_area_count = np.sum(diff)
+        prune_nodes = new_area_count != 0
         self.occ_map = new_occmap
+        if prune_nodes:
+            self.prune_graph(self.start)
+        self.path_found = not self.goal.cost == np.inf
+        return self.path_found
+
+    def prune_graph(self, parent, remove=False):
+        occ = self.occ_map[parent.posn[1], parent.posn[0]]
+        remove = occ != 0 or remove
+        if remove:
+            self.remove_node(parent)
+        else:
+            for child in parent.child_nodes:
+                _, col = self.line_btw_nodes(parent, child)
+                if col:
+                    self.remove_node(child)
+                else:
+                    self.prune_graph(child)
+
+    def is_valid_config(self):
+        try:
+            start = self.occ_map[self.start.posn[1], self.start.posn[0]]
+            end = self.occ_map[self.goal.posn[1], self.goal.posn[0]]
+            obs = start + end
+            return obs == 0
+        except IndexError:
+            return False
 
     @staticmethod
     def distance_func(n1, n2):
@@ -117,6 +151,19 @@ class RRTStar:
 
     def add_node(self, node: Node):
         self.graph.add_node(node.id, item=node)
+        return
+
+    def remove_node(self, node: Node):
+        try:
+            self.graph.remove_node(node.id)  # Removes edges too
+            for child in node.child_nodes:
+                self.prune_graph(child, True)
+            if node == self.goal:
+                node.cost = np.inf
+            else:
+                del node
+        except nx.NetworkXError:
+            pass
         return
 
     def add_edge(self, parent: Node, child: Node):
@@ -134,7 +181,7 @@ class RRTStar:
     def random_point(self):
         while True:
             ind = []
-            shape = self.occ_map.shape
+            shape = self.occ_map.shape[::-1]
             for dim in shape:
                 ind.append(np.random.randint(0, dim))
             if self.occ_map[ind[1], ind[0]] == 0:
@@ -234,31 +281,10 @@ class RRTStar:
             cv.circle(out_img, self.start.posn, node_radius, color=(0, 0, 255))
         return out_img
 
-    def check_path(self, fix_path=True):
-        # Check is path still valid and return True, else False
-        path = self.get_final_path(False)
-        if path:
-            for i in range(len(path) - 1):
-                _, coll = self.line_btw_nodes(path[i], path[i - 1])
-                if coll:
-                    self.print("Path broken by new obstacles")
-                    return False, None
-            return True, path
-        else:
-            return False
-
-    def control_drone(self, posn):
-        if self.path_found:
-            valid, path = self.check_path()
-            if valid:
-                posn_node = Node(posn, 0)
-                dist = path - posn_node
-                close_nodes = np.argwhere(dist < self.radius)
-                closest_node_arg = np.max(close_nodes)
-                return path[closest_node_arg].posn
-        return None
-
     def find_path(self):
+        assert self.is_valid_config(), "RRT does not have valid configuration"
+        if self.path_found:
+            return self.get_final_path()
         for i in tqdm(range(self.max_iter), disable=not self.verbosity):
             x_rand = Node(self.random_point(), -1)
             x_nearest = self.nearest_node(x_rand)
@@ -286,11 +312,7 @@ class RRTStar:
                     self.connect_goal(i)
                     if self.path_found:
                         return self.get_final_path()
-        assert True, self.print("Path not found")
-        return None
-
-    def fix_path(self, child, parent):
-        pass
+        assert False, self.print("Path not found")
 
     def get_next_posn(self, current_posn, ret_posn=True):
         current_posn = Node(current_posn, 0)
@@ -329,21 +351,34 @@ class RRTStar:
             return None
 
 
-def test_RRT_start():
+def RRT_start():
     print("Start Test")
     # world_map = np.load("data/world_map.npy")
     # drone_obs_matrix = np.load("data/drone_obs_matrix.npy")
     occ_map = np.load("data/occ_map.npy")
-    rrt = RRTStar(occ_map, np.array([15, 212]), np.array([440, 440]), 20, 5000, True)
+    rrt = RRTStar(occ_map.copy(), np.array([50, 50]), np.array([500, 500]), 20, 5000, True)
     path = rrt.find_path()
     out_img = rrt.plot_graph()
-    nearest_goal = rrt.nearest_node(rrt.goal)
     on_obst = rrt.nearest_node(Node(np.array([200, 140]), -1))
     is_obst = rrt.occ_map[on_obst.posn[0], on_obst.posn[1]] != 0
+
+    # Obstacle intersects path
+    cv.circle(occ_map, center=(250, 250), radius=60, thickness=-1, color=255)
+    cv.circle(out_img, center=(250, 250), radius=60, thickness=-1, color=(255, 0, 0))
+
+    # Obstacle won't intersect path
+    # cv.circle(occ_map, center=(750, 750), radius=40, thickness=-1, color=255)
+    # cv.circle(out_img, center=(750, 750), radius=40, thickness=-1, color=(255, 0, 0))
+
+    path_valid = rrt.update_occmap(occ_map.copy())
+    out_img2 = rrt.plot_graph()
+    path = rrt.find_path()
+    out_img3 = rrt.plot_graph()
+    nearest_goal = rrt.nearest_node(rrt.goal)
     path = rrt.get_final_path()
     print("Test complete. Exiting....")
     return
 
 
 if __name__ == '__main__':
-    test_RRT_start()
+    RRT_start()
