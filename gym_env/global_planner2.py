@@ -35,7 +35,9 @@ def global_path(grid_size, num_drones):
 
 
 if __name__ == '__main__':
-    visit, dron_dict = global_path(4, 2)
+    visit, dron_dict = global_path(20, 5)
 
-    for key, value in dron_dict:
+    for key, value in dron_dict.items():
         print(key, ": ", len(value))
+
+    print("Done")
