@@ -17,6 +17,7 @@ cost = parent's cost + Euclidean distance from parent.
 All vertices and edges in the RRT* are stored in a networkx\cite{SciPyProceedings_11} undirected graph G.
 Algorithm:
 \begin{algorithmic}[1]
+    \State \textbf{Do for n iterations}
     \State Node: $x_{rand}$ = A random point sampled from the free space (uniform distribution)
     \State Node: $x_{nearest}$ = Point nearest to $x_{rand}$
     \State Node: $x_{new}$ = Point in free space along line (and farthest to) $x_{nearest}$ to $x_{rand}$ with distance $\leq$ radius
@@ -31,4 +32,9 @@ Algorithm:
     \State\hspace{\algorithmicindent} Add edge ($x_{new}$, $x_{near}$) and set $x_{new}$ as parent of $x_{near}$
     \State \textbf{end if}
     \EndFor
+    \State After every 100 iterations check if goal is within the radius of a vertice and can be connected to it without collision
 \end{algorithmic}
+The algorithm terminates once the Goal can be connected.
+Path is found by connecting the parent node of all nodes starting with the goal node.
+While flying, at each timestep, the drone finds all the vertices in the path that are within distance radius.
+Then the drone flies towards the vertice that is furthest up the path.
