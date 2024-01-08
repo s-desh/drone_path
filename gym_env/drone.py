@@ -27,6 +27,7 @@ class Drone:
         self.local_goal_posn = None
         self.last_goal_posn = None
         self.local_origin = None
+        self.goal_reached = False
         # self.get_next_globalgoal_posn = None
         logger.info("Drone {} initialized".format(self.id))
 
@@ -152,11 +153,12 @@ class Drone:
             logger.info(f"Drone {self.id} : Current and global goal position are same")
 
             if self.iter + 1 == len(self.global_path):
-                logger.info(f"------------Drone {self.id} : reached end of global path------------")
-                exit()
+                if not self.goal_reached:
+                    logger.info(f"------------Drone {self.id} : reached end of global path------------")
+                self.goal_reached = True
             else:
                 # update rrt with new global goal position
                 self.iter += 1
                 self.update()
 
-        return action
+        return action, self.goal_reached
