@@ -206,7 +206,7 @@ class DroneSim(CtrlAviary):
                 pos = self.pos[drone, :2]
                 curr_drone_pos = self.meter_to_world_map(pos)
                 cv.circle(self.progress_map, curr_drone_pos, radius=1, color=self.color_progress[drone], thickness=-1)
-            cv.imshow("preview_map", self.progress_map)
+            cv.imshow("preview_map", cv.rotate(self.progress_map, cv.ROTATE_90_COUNTERCLOCKWISE))
 
         key = cv.waitKey(1)
         if key == ord('q'):
