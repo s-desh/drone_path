@@ -1,3 +1,5 @@
+from typing import Tuple, Any
+
 import numpy as np
 from RRT import RRTStar, transform_occ_img
 import cv2 as cv
@@ -15,7 +17,7 @@ class Drone:
         self.saved_posn = None
         self.next_goal = None
         self.id = id
-        self.env = env  
+        self.env = env
         self.global_path = global_path if not stub else np.array([[500.0,500.0], [500.0, 600.0], [500.0, 700.0]])
         # np.array([[947.0,900.0], [500.0, 500.0], [200.0, 200.0]])
         self.control = DSLPIDControl(drone_model=drone_model)
@@ -60,7 +62,7 @@ class Drone:
         if meter_to_world:
             posn = self.env.meter_to_world_map(posn)
         return posn
-    
+
     def get_local_occmap(self, occ_map, start, gaol):
         # get new local occupancy map based on current position
         cx, cy = start[0], start[1]
@@ -124,7 +126,7 @@ class Drone:
         logger.info(f"Drone {self.id} : RRT updated")
         self.control.reset()
 
-    def step_action(self, obs, debug=False) -> np.ndarray:
+    def step_action(self, obs, debug=False) -> tuple[Any, bool]:
         # curr posn in local map
         curr_pos = self.get_curr_posn(xyz=False) - self.local_origin
         if self.detect_obs:
@@ -149,7 +151,7 @@ class Drone:
         
         
          # if current and global goal position are same, increment the global goal position
-        if np.allclose(self.get_curr_posn(xyz=False), self.get_next_globalgoal_posn(), atol=2):
+        if np.allclose(self.get_curr_posn(xyz=False), self.get_next_globalgoal_posn(), atol=3):
             logger.info(f"Drone {self.id} : Current and global goal position are same")
 
             if self.iter + 1 == len(self.global_path):
