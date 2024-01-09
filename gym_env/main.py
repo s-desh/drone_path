@@ -39,7 +39,7 @@ DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 DETECT_OBSTACLE = False
 NUM_OF_CYLLINDERS = 1
-AREA_SIZE = 20
+AREA_SIZE = 30
 area_to_grid = 5
 GRID_SIZE = int(AREA_SIZE / area_to_grid)
 

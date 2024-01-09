@@ -626,9 +626,9 @@ class BaseAviary(gym.Env):
         rot_mat = np.array(p.getMatrixFromQuaternion(self.quat[nth_drone, :])).reshape(3, 3)
         #### Set target point, camera view and projection matrices #
         target = np.dot(rot_mat, np.array([1000, 0, 0])) + np.array(self.pos[nth_drone, :])
-        DRONE_CAM_VIEW = (p.computeViewMatrixFromYawPitchRoll(distance=5,
+        DRONE_CAM_VIEW = (p.computeViewMatrixFromYawPitchRoll(distance=4,
                                                               yaw=0,
-                                                              pitch=0,
+                                                              pitch=-90,
                                                               roll=0,
                                                               cameraTargetPosition=self.pos[nth_drone, :],
                                                               upAxisIndex=2,
