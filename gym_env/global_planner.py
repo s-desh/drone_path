@@ -79,8 +79,8 @@ def bfs_multi_drones(grid_size, num_drones):
 
 
 if __name__ == "__main__":
-    grid_size = 20
-    num_drones = 5
+    grid_size = 4
+    num_drones = 3
 
     # Run the BFS for multiple drones.
     visit, drone_paths = bfs_multi_drones(grid_size, num_drones)
@@ -94,5 +94,5 @@ if __name__ == "__main__":
     print("Grid:")
     print(visit)
     # checking the number of cells covered by each drone (checking min_length condition previosuly added)
-    for key, value in drone_paths.items():
-        print(key, len([item for item in value if item]))
+    # for key, value in drone_paths.items():
+    #     print(key, len([item for item in value if item]))
