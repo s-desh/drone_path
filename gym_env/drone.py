@@ -34,6 +34,14 @@ class Drone:
         logger.info("Drone {} initialized".format(self.id))
 
     def get_next_globalgoal_posn(self, meter_to_world=True):
+        self.clean_goal_postion()
+        goal_posn = self.global_path[self.iter]
+        if meter_to_world and not self.stub:
+            # reorient the goal position to world map
+            goal_posn = self.env.meter_to_world_map(np.array([goal_posn[0] - self.env.area_size/2, goal_posn[1] - self.env.area_size/2]))
+        return goal_posn
+
+    def clean_goal_postion(self):
         for i in range(self.iter, len(self.global_path)):
             goal_posn = self.global_path[i]
             if not self.stub:
@@ -42,11 +50,6 @@ class Drone:
             if self.env.occ_map_hidden[int(goal_posn[1]), int(goal_posn[0])] == 0:
                 self.iter = i
                 break
-        goal_posn = self.global_path[self.iter]
-        if meter_to_world and not self.stub:
-            # reorient the goal position to world map
-            goal_posn = self.env.meter_to_world_map(np.array([goal_posn[0] - self.env.area_size/2, goal_posn[1] - self.env.area_size/2]))
-        return goal_posn
 
     def get_curr_posn(self, meter_to_world=True, xyz=True, saved_posn=2):
         if saved_posn == 1:
