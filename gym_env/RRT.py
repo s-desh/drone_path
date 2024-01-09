@@ -282,7 +282,9 @@ class RRTStar:
         return out_img
 
     def find_path(self):
-        assert self.is_valid_config(), "RRT does not have valid configuration"
+        if not self.is_valid_config():
+            print("RRT does not have valid configuration")
+            raise
         if self.path_found:
             return self.get_final_path()
         for i in tqdm(range(self.max_iter), disable=not self.verbosity):
