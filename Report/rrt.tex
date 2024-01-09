@@ -1,0 +1,42 @@
+%! Author = shantnavagarwal
+%! Date = 08/01/24
+\subsubsection{RRT Star}
+We use the RRT Star algorithm first described by Karaman et al.\cite{karaman2011sampling} for planning an error free path between the start and goal positions.
+The drones maintain a constant and unique altitude at all times ensuring they don't collide with each other.
+The drones are constrained to maintain the same yaw angle as this does not have any influence on the simulation in our chosen scenario.
+Therefore, planning is done in the X-Y 2 Dimensional space to reduce search space and improve performance.
+The start position is the drone's current position, goal position is received from the global planner.
+The occupancy map is sliced to contain the start and goal locations with sufficient padding.
+This reduces search space for $RRT^*$ algorithm and improves performance.
+We have implemented the RRT* algorithm in Python.
+The $RRT^*$ takes start, goal position, occupancy map and radius as input parameters.
+Occupancy map contains all the valid positions in XY space that the drone can visit.
+All vertices in RRT* including start and goal are stored as Node(s).
+The Node object stores their position, cost, parent nodes and child nodes.
+cost = parent's cost + Euclidean distance from parent.
+All vertices and edges in the RRT* are stored in a networkx\cite{SciPyProceedings_11} undirected graph G.
+Algorithm:
+\begin{algorithmic}[1]
+    \State \textbf{Do for n iterations}
+    \State Node: $x_{rand}$ = A random point sampled from the free space (uniform distribution)
+    \State Node: $x_{nearest}$ = Point nearest to $x_{rand}$
+    \State Node: $x_{new}$ = Point in free space along line (and farthest to) $x_{nearest}$ to $x_{rand}$ with distance $\leq$ radius
+    \State Node(s): $x_{arr}$ = List of nodes with Euclidean distance from $x_{new}$ $\leq$ radius
+    \State Find node $x_{min}$ \in $x_{arr}$ such that $x_{min}$ cost + Euclidean distance between $x_{min}$ and $x_{new}$ is minimum.
+    \State Add node $x_{new}$ and edge ($x_{min}$, $x_{arr}$) to G. Set $x_{min}$ as the parent of $x_{arr}$
+    \For{$x_{near}$ in $x_{arr}$}
+    \State Bool: collision = True if line between $x_{near}$ and $x_{arr}$ goes through an obstacle else False
+    \State Float: $new\_cost$ = $x_{near}$ cost + Euclidean distance between $x_{near}$ and $x_{arr}$
+    \State \textbf{if}(collision == False $\&$ $new\_cost$ $<$ $x_{near}$ cost)
+    \State\hspace{\algorithmicindent} Remove edge (parent $x_{near}$, $x_{near}$)
+    \State\hspace{\algorithmicindent} Add edge ($x_{new}$, $x_{near}$) and set $x_{new}$ as parent of $x_{near}$
+    \State \textbf{end if}
+    \EndFor
+    \State After every 100 iterations check if goal is within the radius of a vertice and can be connected to it without collision
+\end{algorithmic}
+The algorithm terminates once the Goal can be connected.
+Path is found by connecting the parent node of all nodes starting with the goal node.
+While flying, at each timestep, the drone finds all the vertices in the path that are within distance radius.
+Then the drone flies towards the vertice that is furthest up the path.
+
+TODO shorten, narrative, separate in paragraphs

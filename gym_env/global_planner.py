@@ -20,10 +20,10 @@ class GlobalPlanner:
         x, y = self.position
 
         # Moves in 4 directions
-        potential_moves = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+        potential_moves = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1), (x + 1, y + 1), (x - 1, y - 1), (x - 1, y + 1), (x + 1, y - 1)]
 
         for move in potential_moves:
-            if ((0 <= move[0] < grid.shape[0]) and (0 <= move[1] < grid.shape[1]) and (move not in visited)):
+            if ((0 <= move[0] < grid.shape[0]) and (0 <= move[1] < grid.shape[1]) and (move not in visited )):
                 # Move to the new cell and mark it as visited.
                 self.position = move
                 self.visited_cells.add(move)
@@ -39,7 +39,10 @@ def bfs_multi_drones(grid_size, num_drones):
 
     # for starting points while choosing more number of drones, add certain number (say 3 for 5 drones) to i, inorder to keep
     # the drones starting position in approx middle.
-    starting_points = [(i, 0) for i in range(2, 2 + num_drones)]
+    starting_points = []
+    for i in range(num_drones):
+        starting_points.append((0, 0))
+
     drones = [GlobalPlanner(i, start=starting_points[i]) for i in range(num_drones)]
 
     # Initializing a queue for BFS.
@@ -64,8 +67,15 @@ def bfs_multi_drones(grid_size, num_drones):
                 bfs_queue.append((i, drone.position))
 
     # Return the paths covered by each drone.
-    paths = {f"Drone {i + 1}": drone.path for i, drone in enumerate(drones)}
-    return paths
+    paths = {i+1: np.array(drone.path) + 1 for i, drone in enumerate(drones)}
+    visit = np.ones((grid_size, grid_size)) * -1
+    for drone, path in paths.items():
+        drone_id = drone
+        j = 1
+        for dn in path:
+            visit[dn[0]-1, dn[1]-1] = (drone_id + j / 100) * 100
+            j += 1
+    return visit, paths
 
 
 if __name__ == "__main__":
@@ -73,19 +83,9 @@ if __name__ == "__main__":
     num_drones = 5
 
     # Run the BFS for multiple drones.
-    drone_paths = bfs_multi_drones(grid_size, num_drones)
+    visit, drone_paths = bfs_multi_drones(grid_size, num_drones)
 
-    # Checking the covered cells by printing grid
-    visit = np.ones((grid_size, grid_size))*-1
-    for drone, path in drone_paths.items():
-        drone_id = int(drone[-1])
-        j = 1
-        for dn in path:
-            visit[dn[0], dn[1]] = (drone_id + j / 100)*100
-            j += 1
-
-
-    if np.any(visit == 0):
+    if np.any(visit == -1):
         print("There is at least one cell not visited.")
 
     else:
