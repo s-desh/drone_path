@@ -1,0 +1,15 @@
+\subsection{Setup}
+
+The simulation uses pybullet for physics and few methods from gym-pybullet-drones modified to suit our needs. Important parameters used for experimenting are - number of drones, number of trees and area size. For the most part we've used $3$ drones for exploring a forest area of $900m^2$ with $200$ trees (obstacles) as shown in [picture]. \\
+
+The global planner provides way-points for each drone such that the entire forest is scouted. All way-points are considered as local intermediate goals used to reveal slices of the global occupancy map to the drone, which navigates using a obstacle free path provided by the RRT algorithm. The drone uses a PID controller (code reuse) to follow the desired path.\\
+
+\subsection{Results}
+
+The video [Link to video] shows the drones navigating in the aforementioned setup.\\
+
+[picture] shows the path (in yellow) followed by each drone to explore the map using the path provided by global path planner, which took x mins. \\
+
+[picture] shows the simulation running in a smaller area of $400m^2$ with $100$ trees took x mins. \\
+
+[picture] shows the RRT trees in a local map. As shown the drone doesn't have to know its final goal postion and such a series of local maps can guide the drone towards the goal while offering benefits of faster computation.

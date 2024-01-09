@@ -2,9 +2,9 @@
 %2345678901234567890123456789012345678901234567890123456789012345678901234567890
 %        1         2         3         4         5         6         7         8
 
-\documentclass[letterpaper, 10 pt, conference]{ieeeconf}  % Comment this line out if you need a4paper
+%\documentclass[letterpaper, 10 pt, conference]{ieeeconf}  % Comment this line out if you need a4paper
 
-%\documentclass[a4paper, 10pt, conference]{ieeeconf}      % Use this line for a4 paper
+\documentclass[a4paper, 11pt, conference]{ieeeconf}      % Use this line for a4 paper
 
 \IEEEoverridecommandlockouts                              % This command is only needed if 
                                                           % you want to use the \thanks command
@@ -36,9 +36,12 @@
 % Useful packages
 \usepackage{amsmath}
 \usepackage{graphicx}
+\graphicspath{ {./images/} }
 \usepackage[colorlinks=true, allcolors=blue]{hyperref}
 \usepackage{float}
 \usepackage{subcaption}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
 \title{\LARGE \bf Multi-Agent Planning to Detect Obstacles and Navigate in an Unknown Environment}
 
 
@@ -78,12 +81,13 @@
 % 1/2-1 page
  \input{robot_model}
 \section{MOTION PLANNING}
- 1/2-1 page
-
+% 1/2-1 page
+\input{global_planner}
+\input{rrt}
 \section{RESULTS}
-1 page
-
+\input{results}
 \section{DISCUSSION}
+\input{discussion}
 1/2-1 page
  
 
@@ -106,14 +110,7 @@
 
 
 
-\begin{thebibliography}{99}
-
-\bibitem{c1} Example, Example bibliography, The bibliography: A great example, 1st ed. vol. 1, Delft, 2019, pp. 1-2
-
-
-\end{thebibliography}
-
-
-
+\bibliographystyle{ieeetr}
+\bibliography{references}
 
 \end{document}
