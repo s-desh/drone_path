@@ -102,7 +102,8 @@ class Drone:
         self.rrt.update_occmap(self.get_local_occmap(newocc_map, self.get_curr_posn(xyz=False, saved_posn=0),
                                                      next_global_goal_posn).copy())
         plot_rrt = self.rrt.plot_graph()
-        cv.imwrite(f"rrt_drone_{self.id}_iter_{self.iter}.png", transform_occ_img(plot_rrt))
+        cv.imwrite(self.env.ONBOARD_IMG_PATH + "/drone_" + str(self.id) + "/" +
+                   f"rrt_drone_{self.id}_iter_{self.iter}.png", transform_occ_img(plot_rrt))
         # threading error
         # cv.imshow("occupancy: " + str(self.id), transform_occ_img(plot_rrt))
         # cv.waitKey(1)
