@@ -1,14 +1,7 @@
 
 We have decided to use Quadrotor as our robot.
 
-\subsection{Working of Quadrotors}
-
-The quadrotor is a highly non-linear, six degree-of-freedom and under-actuated system. A quadrotor has two sets of counter-rotating propellers, therefore neutralizing the effective aerodynamic drag. It has four principal modes of operation: 
-Vertical movement is controlled by simultaneously increasing or decreasing the thrust of all rotors. Yaw moment is created by proportionally varying the speeds of counter-rotating parts to have movement with respect to quadrotor's z-axis. Roll can be controlled by applying differential thrust forces on opposite rotors of the quadrotor to have movement with respect to quadrotor's x-axis. Pitch can be controlled by applying differential thrust forces on opposite rotors of the quadrotor to have movement with respect to quadrotor's y-axis.
-
-\subsection{Quadrotor Model}
-
-\subsubsection{Model of a rotor}
+\subsection{Model of a rotor}
 
 Each rotor rotates with angular velocity $\omega$ and generates a lift force F and moment M. Moment is acting opposite to the directing of rotation.
 
@@ -20,36 +13,37 @@ $M_i = k_m * \omega_i^2$, \hspace{1cm} $k_m = k_Q*\rho * D^5$
 
 where:
 
-$k_T$ is thrust coefficient
+%$k_T$ is thrust coefficient
 
-$k_Q$ is torque 
+%$k_Q$ is torque 
 
-$rho$ is fluid density
+%$rho$ is fluid density
 
-$D$ is diameter of propeller
+%$D$ is diameter of propeller
 
-\subsubsection{Equations of Motion}
+\subsection{Equations of Motion}
 
 Total thrust and moment is the sum of individual ones in each of the 4 rotors.
 
 Thrust: $F = $\sum F_i$ - mga_3$
 
-Here, $F_x$ are individual lift forces by the propellers and $m*g$ is the one by gravity.
+%Here, $F_x$ are individual lift forces by the propellers and $m*g$ is the one by gravity.
 
 Moment: $M = $\sum r_i*F_i + \sum M_i$
 
-Here, $r_i*F_i$ are the moments created by forces in quadrotor's centre of gravity and $M_x$ are the individual moments created by the propellers.
+%Here, $r_i*F_i$ are the moments created by forces in quadrotor's centre of gravity and $M_x$ are the individual moments created by the propellers.
 
 
-\subsubsection{Newton-Euler Equations for Quadrotor}
+\subsection{Newton-Euler Equations for Quadrotor}
 
-\textbf{Linear Dynamics} Applying Newton's Second Law for system of particles, we get (in inertial frame);
+\textit{Linear Dynamics}:
+
+Applying Newton's Second Law for system of particles, we get (in inertial frame);
 
 $F = mass * acceleration$ 
 
-$acceleration (\ddot{r}) = d\dot{r}/dt$, where $\dot{r} = [u,v,w]^T$ (3.3)
-
-Since, $w$ is the yaw-axis in which we calculate thrust, we get;
+%$acceleration (\ddot{r}) = d\dot{r}/dt$, where $\dot{r} = [u,v,w]^T$ (3.3)
+In matrix form, we get;
 
 \[
 mass*\ddot{r} = \begin{bmatrix}
@@ -65,16 +59,18 @@ R_\psi\phi\theta \begin{bmatrix}
 \]
 \\
 
-\textbf{Rotational Dynamics} Applying Euler's rotation equations, we get (in body frame);
+\textit{Rotational Dynamics}:
 
-$M_c = ^AdH_c^B/dt = ^BdH_c^B/dt + ^A\omega^B \times H_c^B$
+%Applying Euler's rotation equations, we get (in body frame);
 
-where, $H_c$ is the angular momentum and $^A\omega^B$ is angular velocity of body B in frame A which is given by $p.b_1 + q.b_2 + r.b_3$
+%$M_c = ^AdH_c^B/dt = ^BdH_c^B/dt + ^A\omega^B \times H_c^B$
 
-General vector form of Euler's equation is;
+%where, $H_c$ is the angular momentum and $^A\omega^B$ is angular velocity of body B in frame A which is given by $p.b_1 + q.b_2 + r.b_3$
+
+Applying General vector form of Euler's equation;
 $M_c = I\dot{\omega} + \omega \times (I\omega)$
 
-For Quadrotor, after rearranging the general vector form;
+For Quadrotor, after rearranging the general vector form, we get;
 \[
 I\begin{bmatrix}
     \dot{p} \\
@@ -152,7 +148,7 @@ Final equations using Linear and Rotational dynamics equations, we get;
 \end{bmatrix}
 \]
 
-TODO shorten, narrative, separate in paragraphs
+%TODO shorten, narrative, separate in paragraphs
 
 %\subsection{State Variables}
 
