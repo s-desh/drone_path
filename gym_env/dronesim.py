@@ -281,7 +281,7 @@ class DroneSim(CtrlAviary):
         tree = ET.ElementTree(robot)
         
         # Save the URDF to a file
-        urdf_file_path = "wall_urdf.xml"
+        urdf_file_path = "assets/wall_urdf.xml"
         tree.write(urdf_file_path)
 		
         p.loadURDF(urdf_file_path,

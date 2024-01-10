@@ -25,7 +25,7 @@ from log_config import setup_logger
 logger = setup_logger(__name__)
 
 DEFAULT_DRONES = DroneModel("cf2x")
-DEFAULT_NUM_DRONES = 3
+DEFAULT_NUM_DRONES = 2
 DEFAULT_PHYSICS = Physics("pyb")
 DEFAULT_GUI = True
 DEFAULT_RECORD_VISION = False
@@ -39,7 +39,7 @@ DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 DETECT_OBSTACLE = False
 NUM_OF_CYLLINDERS = 10
-AREA_SIZE = 20
+AREA_SIZE = 10
 GRID_SIZE = int(AREA_SIZE / 5)
 
 def run(
