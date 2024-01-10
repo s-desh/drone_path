@@ -1,23 +1,24 @@
-Objective:
-\begin{enumerate}
-    \item Multiple drones plan and scan the unknown environment. The unknown environment is broken down into multiple grids and the task of the drones is to visit each grid in a cooperative manner.
+\subsection{Objective}
+\begin{itemize}
+    \item Multiple drones plan and scan the unknown environment. The unknown environment is broken down into a grid and the task of the drones is to visit each cell of the grid in a cooperative manner.
     \item The drones detect obstacles around them which are then transformed to the initial frame and updated on a common map.
     \item When a person is found, a different drone using the common map calculates the optimal path to reach their location and provide relief.
-\end{enumerate}
-Environment:
-\begin{enumerate}
+\end{itemize}
+
+\subsection{Environment}
+\begin{itemize}
     \item We will use PyBulletDrone environment for this project where cylinders are used to represent trees.
     \item The environment spawns these trees at random locations throughout the map which is unknown to the planning algorithm. These obstacles are sensed by the robot as they come within the sensing range of onboard sensors.
-    \item A person is said to be detected when the drone is close enough to their location.
-\end{enumerate}
-Procedure:
-\begin{enumerate}
-    \item Our workspace is \(R^3\). Configuration space of the quadcopter is \(R^3 \times SO(3)\). We will plan in the workspace \(R^3\) itself. \textcolor{red}{Should we search for the optimal path in the 3D World space or the 6D C-Space of the robot or 12D Position + Velocity space? We can use kinodynamics of the quadrotor to simplify the problem.}
-    \item We use a high level planner that directs the drones to scan the environment in a Breadh first search manner. The robots communicate with a central node that directs the search such that 2 drones do not explore the same region.
-    \item The drone gets its next target location from the high level planner. We use the \(RRT^*\) algorithm on the common map to plan the path for the drone from its current location to the target location.
-    \item We use the \(RRT^*\) algorithm over \(A^*\) because the entire map is not known. As \(RRT^*\) builds the tree incrementally, we can update the path with new information without recomputing the map entirely.
-    \item Then make the quadcopters follow this path using an off the shelf control algorithm.
-    \item The algorithm will be evaluated on the time taken to find the lost person and the the time taken to provide aid to the person once found.
-\end{enumerate}
+    %\item A person is said to be detected when the drone is close enough to their location.
+\end{itemize}
 
-TODO shorten, reiterate goal
+\subsection{Procedure}
+\begin{itemize}
+    \item Our workspace is \(R^3\). Configuration space of the quadcopter is \(R^3 \times SO(3)\). We will plan in the workspace \(R^3\) itself. 
+    \item We use a global planner that directs the drones to scan the environment in a Breadth first search manner. The robots communicate with a central node that directs the search such that 2 drones do not explore the same region.
+    \item The drone gets its next target location from the global planner. We use the \(RRT^*\) algorithm on the common map to plan the path for the drone from its current location to the target location.
+   % \item We use the \(RRT^*\) algorithm over \(A^*\) because the entire map is not known. As \(RRT^*\) builds the tree incrementally, we can update the path with new information without recomputing the map entirely.
+    \item Then make the quadcopters follow this path using PID algorithm.
+    %\item The algorithm will be evaluated on the time taken to find the lost person and the the time taken to provide aid to the person once found.
+\end{itemize}
+
