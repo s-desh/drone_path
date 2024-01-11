@@ -1,15 +1,7 @@
-import os
-import time
-import argparse
 from datetime import datetime
-import pdb
-import math
-import random
 
 import numpy as np
-import pybullet as p
-import matplotlib.pyplot as plt
-import cv2 as cv
+import argparse
 
 from enums import Physics
 from dronesim import DroneSim
@@ -38,7 +30,7 @@ DEFAULT_DURATION_SEC = 2000
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 DETECT_OBSTACLE = False
-NUM_OF_CYLLINDERS = 1
+NUM_OF_CYLINDERS = 10
 AREA_SIZE = 20
 area_to_grid = 5
 GRID_SIZE = int(AREA_SIZE / area_to_grid)
@@ -57,7 +49,7 @@ def run(
         duration_sec=DEFAULT_DURATION_SEC,
         output_folder=DEFAULT_OUTPUT_FOLDER,
         colab=DEFAULT_COLAB,
-        num_cyllinders=NUM_OF_CYLLINDERS,
+        num_trees=NUM_OF_CYLINDERS,
         area_size=AREA_SIZE,
         detect_obstacle=DETECT_OBSTACLE
 ):
@@ -82,7 +74,7 @@ def run(
                    record=record_video,
                    obstacles=obstacles,
                    user_debug_gui=user_debug_gui,
-                   num_cylinders=num_cyllinders,
+                   num_cylinders=num_trees,
                    area_size=area_size,
                    detect_obstacle=detect_obstacle
                    )
@@ -110,7 +102,7 @@ def run(
         for i in range(0, int(duration_sec * env.CTRL_FREQ)):
             obs, reward, terminated, truncated, info = env.step(action)
             for drone in drones:
-                action[drone.id, :], goals_reached[drone.id] = drone.step_action(obs[drone.id], debug=True)
+                action[drone.id, :], goals_reached[drone.id] = drone.step_action(obs[drone.id], debug=False)
             if np.all(goals_reached):
                 logger.info("All goals reached!")
                 exit()
@@ -121,5 +113,39 @@ def run(
     env.close()
 
 
+def str2bool(val):
+    """Converts a string into a boolean.
+
+    Parameters
+    ----------
+    val : str | bool
+        Input value (possibly string) to interpret as boolean.
+
+    Returns
+    -------
+    bool
+        Interpretation of `val` as True or False.
+
+    """
+    if isinstance(val, bool):
+        return val
+    elif val.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif val.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError("[ERROR] in str2bool(), a Boolean value is expected")
+
+
 if __name__ == '__main__':
-    run()
+    #### Define and parse (optional) arguments for the script ##
+    
+    parser = argparse.ArgumentParser(description='Path planning for drones in a forest simulation')
+  
+    parser.add_argument('--num_drones',         default=DEFAULT_NUM_DRONES,          type=int,           help='Number of drones (default: 3)', metavar='')
+    parser.add_argument('--gui',                default=DEFAULT_GUI,       type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
+    parser.add_argument('--record_video',       default=DEFAULT_RECORD_VISION,      type=str2bool,      help='Whether to record a video (default: False)', metavar='')
+    parser.add_argument('--num_trees',          default=NUM_OF_CYLINDERS,       type=int,      help='Number of trees in the environment (default: True)', metavar='')
+    parser.add_argument('--area_size',               default=AREA_SIZE,        type=int,           help='Length of bounding forest area (default: 20)', metavar='')
+    ARGS = parser.parse_args()
+    run(**vars(ARGS))
