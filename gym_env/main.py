@@ -33,7 +33,7 @@ DETECT_OBSTACLE = False
 NUM_OF_CYLINDERS = 10
 AREA_SIZE = 20
 area_to_grid = 5
-GRID_SIZE = int(AREA_SIZE / area_to_grid)
+
 
 def run(
         drone=DEFAULT_DRONES,
@@ -80,6 +80,7 @@ def run(
                    )
 
     #### Get global path #######################################
+    GRID_SIZE = int(area_size / area_to_grid)
     path_plan, drone_paths = bfs_multi_drones(GRID_SIZE, num_drones)
     logger.info(f"Drone paths: {drone_paths}")
 
@@ -87,7 +88,7 @@ def run(
     drones = [Drone(
         id=i,
         env=env,
-        global_path=drone_paths[i + 1], area=AREA_SIZE, area_to_grid=area_to_grid, drone_model=drone, stub=False
+        global_path=drone_paths[i + 1], area=area_size, area_to_grid=area_to_grid, drone_model=drone, stub=False
     ) for i in range(num_drones)]
 
     for drone in drones:
