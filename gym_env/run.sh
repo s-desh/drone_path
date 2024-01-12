@@ -6,4 +6,4 @@ source venv/bin/activate
 pip install -r ../requirements.txt
 
 echo "Ready, Set, Running simulation..."
-python3 main.py --area "$1" --num_trees "$2" --num_drones "$3"
+python3 main.py --area_size "$1" --num_trees "$2" --num_drones "$3"

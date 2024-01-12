@@ -19,14 +19,29 @@ of 900m2 with 200 trees (obstacles).
 
 
 ## Quick Start
-
-1. Make sure you have `venv` installed.
-2. Run the shell script in gym_env. This will install all dependencies and run the simulation **once**.
+1. Make sure `pip` is installed in your system, else install it with: 
+    ```
+    sudo apt-get install python3-pip
+    ```
+2. Make sure your `pip` installation is up to date:
+    ```
+    pip3 install --upgrade pip
+    ```
+3. Make sure you have `venv` installed, else install it with:
+    ```
+    sudo pip3 install virtualenv 
+    ```
+4. Clone the master branch of the repository using git clone.
+5. Navigate to the path where `drone_path` is installed and use:
+    ```
+    cd drone_path
+    ```
+4. Run the shell script in gym_env. This will install all dependencies and run the simulation **once**.
     ```
     cd gym_env
     ./run.sh 10 5 2
     ```
-3. `deactivate` to deactivate the virtual environment
+5. `deactivate` to deactivate the virtual environment
 
 ## Usage
 

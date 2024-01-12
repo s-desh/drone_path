@@ -146,7 +146,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_drones',         default=DEFAULT_NUM_DRONES,          type=int,           help='Number of drones (default: 3)', metavar='')
     parser.add_argument('--gui',                default=DEFAULT_GUI,       type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
     parser.add_argument('--record_video',       default=DEFAULT_RECORD_VISION,      type=str2bool,      help='Whether to record a video (default: False)', metavar='')
-    parser.add_argument('--num_trees',          default=NUM_OF_CYLINDERS,       type=int,      help='Number of trees in the environment (default: True)', metavar='')
+    parser.add_argument('--num_trees',          default=NUM_OF_CYLINDERS,       type=int,      help='Number of trees in the environment (default: 10)', metavar='')
     parser.add_argument('--area_size',               default=AREA_SIZE,        type=int,           help='Length of bounding forest area (default: 20)', metavar='')
     ARGS = parser.parse_args()
     run(**vars(ARGS))
