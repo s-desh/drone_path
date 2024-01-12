@@ -1,10 +1,12 @@
-\subsection{Algorithm}
+\subsection{Path planning and Control}
 
 \includegraphics[scale=0.5]{images/time_area.png}
 
-As shown, the computation time increases exponentially with area.
-Alternatives are - bidirectional RRT and D star.
-What could be improved / is it practical? TODO
+As shown, the computation time tends to increase exponentially with area and so we've solved RRTs on a smaller areas.
+
+RRTs produce collision free paths but they are not necessarily smooth or optimal.
+In terms of improvements, the differential flatness property of a drone can be exploited to control motion upto the fourth derivative and generate smoother paths and simplifying trajectory generation.
+
  
 \subsection{Global planner}
 
@@ -12,15 +14,11 @@ The global planner provides a series of goals for every drone in the global fram
 
 In practice, the global planner could use a satellite image of a forest and plan drones to cover it. 
 
-Complexity
-What could be improved / is it practical?
-Alternatives
-Supported by results
 
 \subsection{Local maps}
 
 To reduce overall computation time, RRT computes multiple obstacle free paths
-using a series of local maps to reach the global goal [refer results]. This is done by slicing sections of the global occupancy map just enough to include the next goal given by the global planner to avoid use of a global occupancy map. By doing this the computation time is reduced by x. TODO \\ 
+using a series of local maps to reach the global goal. This is done by slicing sections of the global occupancy map just enough to include the next goal given by the global planner to avoid use of a global occupancy map. The area vs time figure clearly shows that local maps of small areas combined would take shorter time to compute compared to the exponential increase of using a single global map.
 
 \subsection{Obstacle detections}
 With that said, all obstacles are revealed within a local map for the drone to compute a obstacle free path. The local map's dimensions can differ depending on the global map and grid size, which means detecting all obstacles within a local map is unlikely in the real world where sensors have a limited range of detection. \\
