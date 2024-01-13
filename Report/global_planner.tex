@@ -21,6 +21,6 @@ For global path planning, the environment is represented as a grid of a certain 
     \item Returns a dictionary containing paths for each drone, where keys are drone identifiers ("Drone 1", "Drone 2", etc.).
 \end{itemize}
 
-\subsection{Execution}
+\subsubsection{Execution}
 
 The code initializes a grid of zeros with dimensions \textit{grid\_size x grid\_size}. It then places drones at specified starting position (0, 0) and initiates the BFS algorithm from each drone's initial position. The BFS process continues until all drones have explored the grid exhaustively without revisiting any cell.
