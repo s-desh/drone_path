@@ -42,6 +42,13 @@
 \usepackage{subcaption}
 \usepackage{algorithmicx}
 \usepackage{algpseudocode}
+\usepackage[
+backend=biber,
+style=numeric,
+sorting=none
+]{biblatex}
+\addbibresource{references.bib}
+
 \title{\LARGE \bf Multi-Agent Planning to Detect Obstacles and Navigate in an Unknown Environment}
 
 
@@ -109,7 +116,6 @@
 
 
 
-\bibliographystyle{ieeetr}
-\bibliography{references}
+\printbibliography
 
 \end{document}
