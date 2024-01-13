@@ -6,3 +6,4 @@ gym_env/__pycache__
 *.log
 *.pyc
 *.png
+gym_env/venv
