@@ -7,9 +7,14 @@
 \end{figure}
 
 
-As shown in Fig. 3, the computation time tends to increase exponentially with area and so we've solved RRTs on a smaller areas. The total time combined for solving RRTs on smaller maps is lesser than finding a path on the entire area.
+As shown in Figure 3, the computation time tends to increase exponentially with area, and so we've solved RRTs on smaller areas.
+The total time combined for solving RRTs on smaller maps is lesser than finding a path on the entire area.
 
-RRTs produce collision free paths but they are not necessarily smooth or optimal.
+RRTs produce a collision-free path, but they are neither smooth nor optimal.
+A smooth path that adheres to the differential flatness property of a drone (i.e., four times differentiable) will allow us to directly calculate the required rotor torques for controlling the drone.
+Using this information, a better controller with feed-forward control can be implemented.
+Webb et al. introduced a Kindodynamic $RRT^*$ algorithm that exactly and optimally connects any pair of states for any system with controllable linear dynamics in state spaces of arbitrary dimensions\cite{DBLP:journals/corr/abs-1205-5088}.
+With this improvement, the drone can fly faster and cover more distance as well.
 In terms of improvements, the differential flatness property of a drone can be exploited to control motion upto the fourth derivative and generate smoother paths and simplifying trajectory generation.
 
  
