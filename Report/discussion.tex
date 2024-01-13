@@ -49,6 +49,7 @@ To reduce overall computation time, RRT computes multiple obstacle free paths
 using a series of local maps to reach the global goal. This is done by slicing sections of the global occupancy map just enough to include the next goal given by the global planner to avoid use of a global occupancy map. The area vs time figure clearly shows that local maps of small areas combined would take shorter time to compute compared to the exponential increase of using a single global map.
 
 \subsection{Obstacle detections}
-With that said, all obstacles are revealed within a local map for the drone to compute a obstacle free path. The local map's dimensions can differ depending on the global map and grid size, which means detecting all obstacles within a local map is unlikely in the real world where sensors have a limited range of detection. \\
- A potential improvement here to obtain a practical performance measure is using a dynamic local map and revealing obstacles only within a certain radius of the drone.
+With that said, all obstacles are revealed within a local map for the drone to compute a obstacle free path.
+The local map's dimensions can differ depending on the global map and grid size, which means detecting all obstacles within a local map is unlikely in the real world where sensors have a limited range of detection.
+A potential improvement here to obtain a practical performance measure is to keep the obstacles hidden and revealing them only when they come within the sensor range of the drone.
 
