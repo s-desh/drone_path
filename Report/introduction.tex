@@ -1,1 +1,8 @@
-Multiple drones efficiently navigate and survey an unfamiliar environment which is broken down into a grid and systematically covering each cell in a cooperative manner. The drones identify obstacles within their vicinity, relay the information to a central map, and update it collaboratively. In this project, we leverage the PyBulletDrone environment, where we have randomnly placed trees. The robots sense these obstacles as they enter the sensing range of their onboard sensors. Our approach employs a global planner, guiding drones in a Breadth First Search fashion. Communication with a central node ensures strategic exploration, preventing overlap between two drones. The global planner dictates each drone's target location. Utilizing the \(RRT^*\) algorithm on the common map, we plan paths for the drones, subsequently employing the PID algorithm to precisely follow these paths.
+Multiple drones efficiently navigate and survey an unfamiliar environment which is broken down into a grid and systematically covering each cell in a cooperative manner.
+The drones identify obstacles within their vicinity, relay the information to a central map, and update it collaboratively.
+In this project, we leverage the PyBulletDrone\cite{panerati2021learning} environment, where we have randomnly placed trees.
+The robots sense these obstacles as they enter the sensing range of their onboard sensors.
+Our approach employs a global planner, guiding drones in a Breadth First Search fashion.
+Communication with a central node ensures strategic exploration, preventing overlap between two drones.
+The global planner dictates each drone's target location.
+Utilizing the \(RRT^*\) algorithm on the common map, we plan paths for the drones, subsequently employing the PID algorithm to precisely follow these paths.
