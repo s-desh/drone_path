@@ -1,8 +1,13 @@
 \subsection{Path planning and Control}
 
+\begin{figure}[h]
+\centering
 \includegraphics[scale=0.5]{images/time_area.png}
+\caption{Area to explore vs time for finding path}
+\end{figure}
 
-As shown, the computation time tends to increase exponentially with area and so we've solved RRTs on a smaller areas.
+
+As shown in Fig. 3, the computation time tends to increase exponentially with area and so we've solved RRTs on a smaller areas. The total time combined for solving RRTs on smaller maps is lesser than finding a path on the entire area.
 
 RRTs produce collision free paths but they are not necessarily smooth or optimal.
 In terms of improvements, the differential flatness property of a drone can be exploited to control motion upto the fourth derivative and generate smoother paths and simplifying trajectory generation.
