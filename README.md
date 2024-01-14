@@ -41,7 +41,7 @@ of 900m2 with 200 trees (obstacles).
 4. Run the shell script in gym_env. This will install all dependencies and run the simulation **once**.
     ```
     cd gym_env
-    ./run.sh 10 5 2
+    ./run.sh 10 10 2
     ```
 5. `deactivate` to deactivate the virtual environment
 
@@ -49,7 +49,7 @@ of 900m2 with 200 trees (obstacles).
 
 You can directly launch a simulation run after the virtual environment is ready, using`main.py`
 
-1. Run - `python3 main.py --area 10 --num_trees 5 --num_drones 2`. With these parameters, the entire simulation will run within 3-4 mins while the experiment uses ones that take much longer.
+1. Run - `python3 main.py --area 10 --num_trees 10 --num_drones 2`. With these parameters, the entire simulation will run within 3-4 mins while the experiment uses ones that take much longer.
 
 2. Run `python3 main.py -h` for available command line arguments.
 
