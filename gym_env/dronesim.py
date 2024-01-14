@@ -10,6 +10,8 @@ from RRT import *
 from controlenv import CtrlAviary
 from enums import DroneModel, Physics
 from tqdm import tqdm
+import xml.etree.ElementTree as ET
+import os
 
 HEIGHT_DIFF = .1  # Height difference between nodes
 
@@ -207,7 +209,8 @@ class DroneSim(CtrlAviary):
                 curr_drone_pos = self.meter_to_world_map(pos)
                 cv.circle(self.progress_map, curr_drone_pos, radius=1, color=self.color_progress[drone], thickness=-1)
             cv.imshow("preview_map", cv.rotate(self.progress_map, cv.ROTATE_90_COUNTERCLOCKWISE))
-
+            path = os.path.join(self.IMG_PATH, "preview_map_frame_" + str(self.FRAME_NUM) + ".png")
+            cv.imwrite(path, cv.rotate(self.progress_map, cv.ROTATE_90_COUNTERCLOCKWISE))
         key = cv.waitKey(1)
         if key == ord('q'):
             cv.destroyAllWindows()
@@ -235,6 +238,70 @@ class DroneSim(CtrlAviary):
         These obstacles are loaded from standard URDF files included in Bullet.
 
         """
+
+        robot = ET.Element("robot", name="wall.urdf")
+
+        # Create the link element
+        link = ET.SubElement(robot, "link", name="wall")
+
+        # Create the contact element
+        contact = ET.SubElement(link, "contact")
+        ET.SubElement(contact, "lateral_friction", value="1.0")
+        ET.SubElement(contact, "rolling_friction", value="0.0")
+        ET.SubElement(contact, "contact_cfm", value="0.0")
+        ET.SubElement(contact, "contact_erp", value="1.0")
+
+        # Create the inertial element
+        inertial = ET.SubElement(link, "inertial")
+        ET.SubElement(inertial, "origin", rpy="0 0 0", xyz="0.0 0.0 0.0")
+        ET.SubElement(inertial, "mass", value="1")
+        inertia = ET.SubElement(inertial, "inertia", ixx="0.0833", ixy="0.0", ixz="0.0", iyy="0", iyz="0.0", izz="0")
+
+        # Create the visual element
+        visual = ET.SubElement(link, "visual")
+        ET.SubElement(visual, "origin", rpy="0 0 0", xyz="0 0 0")
+        geometry = ET.SubElement(visual, "geometry")
+        ET.SubElement(geometry, "box", size=".5 32.5 1")
+        material = ET.SubElement(visual, "material", name="beige")
+        ET.SubElement(material, "color", rgba="1 0.77647058823 0.6 1")
+
+        # Create the collision element
+        collision = ET.SubElement(link, "collision")
+        ET.SubElement(collision, "origin", xyz="0 0 0")
+        ET.SubElement(collision, "geometry").append(ET.SubElement(geometry, "box", size=".5 32.5 1"))
+
+        # Create the XML tree
+        tree = ET.ElementTree(robot)
+        
+        # Save the URDF to a file
+        urdf_file_path = "wall_urdf.xml"
+        tree.write(urdf_file_path)
+		
+        p.loadURDF(urdf_file_path,
+                   [16.25, -0.25, 0.5],
+                   p.getQuaternionFromEuler([0, 0, 0]),
+                   physicsClientId=self.CLIENT
+                   )
+                   
+        p.loadURDF("assets/wall.urdf",
+           [0.25, 16.25, 0.5],
+           p.getQuaternionFromEuler([0, 0, 1.57079633]),
+           physicsClientId=self.CLIENT
+           )
+           
+        p.loadURDF("assets/wall.urdf",
+           [-0.25, -16.25, 0.5],
+           p.getQuaternionFromEuler([0, 0, 1.57079633]),
+           physicsClientId=self.CLIENT
+           )
+        p.loadURDF("assets/wall.urdf",
+           [-16.25, 0.25, 0.5],
+           p.getQuaternionFromEuler([0, 0, 0]),
+           physicsClientId=self.CLIENT
+           )
+                                                           
+        
+        
         if self.cylinder_posns is None:
             for _ in tqdm(range(self.num_cylinders), "Spawning cylinders"):
                 while True:

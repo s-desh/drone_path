@@ -27,8 +27,8 @@ logger = setup_logger(__name__)
 DEFAULT_DRONES = DroneModel("cf2x")
 DEFAULT_NUM_DRONES = 3
 DEFAULT_PHYSICS = Physics("pyb")
-DEFAULT_GUI = True
-DEFAULT_RECORD_VISION = False
+DEFAULT_GUI = False
+DEFAULT_RECORD_VISION = True
 DEFAULT_PLOT = True
 DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_OBSTACLES = True
@@ -38,9 +38,10 @@ DEFAULT_DURATION_SEC = 2000
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 DETECT_OBSTACLE = False
-NUM_OF_CYLLINDERS = 200
+NUM_OF_CYLLINDERS = 1
 AREA_SIZE = 30
-GRID_SIZE = int(AREA_SIZE / 5)
+area_to_grid = 5
+GRID_SIZE = int(AREA_SIZE / area_to_grid)
 
 def run(
         drone=DEFAULT_DRONES,
@@ -87,14 +88,14 @@ def run(
                    )
 
     #### Get global path #######################################
-    path_plan, drone_paths = global_path(GRID_SIZE, num_drones)
+    path_plan, drone_paths = bfs_multi_drones(GRID_SIZE, num_drones)
     logger.info(f"Drone paths: {drone_paths}")
 
     #### Initialize drones #####################################
     drones = [Drone(
         id=i,
         env=env,
-        global_path=drone_paths[i + 1], drone_model=drone, stub=False
+        global_path=drone_paths[i + 1], area=AREA_SIZE, area_to_grid=area_to_grid, drone_model=drone, stub=False
     ) for i in range(num_drones)]
 
     for drone in drones:
