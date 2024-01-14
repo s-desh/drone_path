@@ -2,7 +2,7 @@
 
 \begin{figure}[h]
 \centering
-\includegraphics[scale=0.5]{images/time_area.png}
+\includegraphics[width=0.5\textwidth]{images/time_area.png}
 \caption{Area to explore vs time for finding path}
 \end{figure}
 
@@ -27,6 +27,13 @@ The global planner provides a series of goals for every drone in the global fram
 With this approach, the path pursued by multiple drones is suboptimal compared to a single drone navigating the entire grid. But, as a consequence of having multiple drones, the maximum distance travelled per drone is reduced and so is the total time of scouting.
 
 %[maybe add a time est column]
+\subsection{Path planning and Control}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{images/Global_Planner.png}
+\caption{Grid size vs time to get global path for 3 drones}
+\end{figure}
 
 \begin{table}[!ht]
     \centering
