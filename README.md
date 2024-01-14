@@ -7,6 +7,8 @@
 
 ## Overview 
 
+<img src="https://github.com/s-desh/drone_path/blob/master/Report/images/arch_diag.png?raw=true" width="500" height="500">
+
 This repository simulates multi agent path planning using drones in a forest for search and rescue operations using RRT* algorithm.
 
 The simulation uses pybullet for physics
