@@ -1,8 +1,17 @@
-Multiple drones efficiently navigate and survey an unfamiliar environment which is broken down into a grid and systematically covering each cell in a cooperative manner.
-The drones identify obstacles within their vicinity, relay the information to a central map, and update it collaboratively.
-In this project, we leverage the PyBulletDrone\cite{panerati2021learning} environment, where we have randomnly placed trees.
-The robots sense these obstacles as they enter the sensing range of their onboard sensors.
-Our approach employs a global planner, guiding drones in a Breadth First Search fashion.
-Communication with a central node ensures strategic exploration, preventing overlap between two drones.
-The global planner dictates each drone's target location.
-Utilizing the \(RRT^*\) algorithm on the common map, we plan paths for the drones, subsequently employing the PID algorithm to precisely follow these paths.
+We use multiple drones to efficiently scout a forest environment. The goal is to reduce 
+total time for scouting the region by implementing a two motion planners, one each at 
+global and local levels.
+
+For simulating, we leverage the PyBulletDrone\cite{panerati2021learning} environment, 
+where trees are spawned at random locations and the drones navigate to specific goals. 
+The drones detect obstacles as they enter the sensing range of onboard sensors. 
+Our approach employs a global planner, guiding drones in a Breadth First Search fashion 
+followed by local planning done by RRT*. 
+
+The global planner provides way-points for each drone such that the entire forest is scouted. 
+All way-points are considered as local intermediate goals used to reveal slices of the 
+global occupancy map to the drone, which navigates using a obstacle free path provided by the 
+\(RRT^*\) algorithm. Subsequently the drone uses PID control to precisely follow these paths.\\
+
+We conclude by showing significant computation gains due to two reasons - the multi planner 
+approach while solving RRT* on local occupancy maps.
