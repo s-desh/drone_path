@@ -1,15 +1,15 @@
 \subsection{Path planning and Control}
 
+
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.5\textwidth]{images/time_area.png}
 \caption{Area to explore vs time for finding path}
 \end{figure}
 
-
 RRT* has a time complexity of $O(n)$ for query, $O(nlogn)$ for processing and space complexity of $O(n)$ where n is the number of samples.
 
-As shown in Figure 3, the computation time tends to increase exponentially with area, and so we've solved RRTs on smaller areas.
+As shown in Figure 5, the computation time tends to increase exponentially with area, and so we've solved RRTs on smaller areas.
 The total time combined for solving RRTs on smaller maps is lesser than finding a path on the entire area.
 
 RRTs produce a collision-free path, but they are neither smooth nor optimal.
@@ -17,23 +17,13 @@ A smooth path that adheres to the differential flatness property of a drone (i.e
 Using this information, a better controller with feed-forward control can be implemented.
 Webb et al. introduced a Kindodynamic $RRT^*$ algorithm that exactly and optimally connects any pair of states for any system with controllable linear dynamics in state spaces of arbitrary dimensions\cite{DBLP:journals/corr/abs-1205-5088}.
 With this improvement, the drone can fly faster and cover more distance as well.
-In terms of improvements, the differential flatness property of a drone can be exploited to control motion upto the fourth derivative and generate smoother paths and simplifying trajectory generation.
 
  
 \subsection{Global planner}
 
-The global planner provides a series of goals for every drone in the global frame, scouting the entire region. This is done by converting the grid into cells and providing separate paths for each drone to visit using BFS. This is indeed practical and efficient as it provides continuous cell path by covering immediate neighbouring cells.
+The global planner provides a series of goals for every drone in the global frame, scouting the entire region. This is done by converting the grid into cells and providing separate paths for each drone to visit using BFS. This is indeed practical and efficient as it provides continuous cell path by covering immediate neighbouring cells (refer Fig. 6).
 
-With this approach, the path pursued by multiple drones is suboptimal compared to a single drone navigating the entire grid. But, as a consequence of having multiple drones, the maximum distance travelled per drone is reduced and so is the total time of scouting.
-
-%[maybe add a time est column]
-\subsection{Path planning and Control}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.5\textwidth]{images/Global_Planner.png}
-\caption{Grid size vs time to get global path for 3 drones}
-\end{figure}
+With this approach, the path pursued by multiple drones is suboptimal compared to a single drone navigating the entire grid. But, as a consequence of having multiple drones, the maximum distance travelled per drone (as shown in the table) is reduced and so is the total time of scouting.
 
 \begin{table}[!ht]
     \centering
@@ -49,7 +39,20 @@ With this approach, the path pursued by multiple drones is suboptimal compared t
     \end{tabular}
 \end{table}
 
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{images/Global_Planner.png}
+\caption{Path charted by global planner for 3 drones}
+\end{figure}
+
+
 In practice, the global planner could use a satellite image of a forest and plan drones to cover it. 
+
+%[maybe add a time est column]
+% \subsection{Path planning and Control}
+
+
 
 
 \subsection{Local maps}

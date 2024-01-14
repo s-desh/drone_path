@@ -1,17 +1,6 @@
-We use multiple drones to efficiently scout a forest environment. The goal is to reduce 
-total time for scouting the region by implementing a two motion planners, one each at 
-global and local levels.
+The use of UAVs is rapidly increasing\cite{doi:10.1126/scirobotics.abg1188} in search and rescue (SAR) missions\cite{6290694,doi:10.1080/19475705.2016.1238852}. Such vehicles or drones are flexible, cheap to operate, easy to maintain and avoid risks to pilots in difficult weather conditions compared to crewed aircraft. Finding lost individuals in forests can be arduous given the unreliable GPS signals, which warrants these drones to be equipped with localization, mapping and path planning.
+We simulate multiple such drones to efficiently scout a forest environment. The goal is to reduce total time for scouting the region by implementing two motion planners.
 
-For simulating, we leverage the PyBulletDrone\cite{panerati2021learning} environment, 
-where trees are spawned at random locations and the drones navigate to specific goals. 
-The drones detect obstacles as they enter the sensing range of onboard sensors. 
-Our approach employs a global planner, guiding drones in a Breadth First Search fashion 
-followed by local planning done by RRT*. 
+For simulating, we leverage the PyBulletDrone\cite{panerati2021learning} environment, where trees are spawned at random locations and the drones navigate to specific goals. The global planner provides way-points for each drone such that the entire forest is scouted, while the local planner uses RRT* to chart a path avoiding obstacles. Subsequently the drone uses PID control to precisely follow these paths.\\
 
-The global planner provides way-points for each drone such that the entire forest is scouted. 
-All way-points are considered as local intermediate goals used to reveal slices of the 
-global occupancy map to the drone, which navigates using a obstacle free path provided by the 
-\(RRT^*\) algorithm. Subsequently the drone uses PID control to precisely follow these paths.\\
-
-We conclude by showing significant computation gains due to two reasons - the multi planner 
-approach while solving RRT* on local occupancy maps.
+We conclude by showing significant computation gains by utilizing multiple planners.
