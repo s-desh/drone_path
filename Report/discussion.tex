@@ -1,28 +1,68 @@
-\subsection{Algorithm}
+\subsection{Path planning and Control}
 
-\includegraphics[scale=0.5]{images/time_area.png}
 
-As shown, the computation time increases exponentially with area.
-Alternatives are - bidirectional RRT and D star.
-What could be improved / is it practical? TODO
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{images/time_area.png}
+\caption{Area to explore vs time for finding path}
+\end{figure}
+
+RRT* has a time complexity of $O(n)$ for query, $O(nlogn)$ for processing and space complexity of $O(n)$ where n is the number of samples.
+
+As shown in Figure 5, the computation time tends to increase exponentially with area, and so we've solved RRTs on smaller areas.
+The total time combined for solving RRTs on smaller maps is lesser than finding a path on the entire area.
+
+RRTs produce a collision-free path, but they are neither smooth nor optimal.
+A smooth path that adheres to the differential flatness property of a drone (i.e., four times differentiable) will allow us to directly calculate the required rotor torques for controlling the drone.
+Using this information, a better controller with feed-forward control can be implemented.
+Webb et al. introduced a Kindodynamic $RRT^*$ algorithm that exactly and optimally connects any pair of states for any system with controllable linear dynamics in state spaces of arbitrary dimensions\cite{DBLP:journals/corr/abs-1205-5088}.
+With this improvement, the drone can fly faster and cover more distance as well.
+
  
 \subsection{Global planner}
 
-The global planner provides a series goals for every drone in the global frame, scouting the entire region. This is done by converting the grid into polar coordinates and equally distributing regions for each drone to visit. This is indeed practical and faster compared to an alternative approach where the planning is done in Cartesian coordinates, shown by the x percent reduction in compute time. TODO
+The global planner provides a series of goals for every drone in the global frame, scouting the entire region. This is done by converting the grid into cells and providing separate paths for each drone to visit using BFS. This is indeed practical and efficient as it provides continuous cell path by covering immediate neighbouring cells (refer Fig. 6).
+
+With this approach, the path pursued by multiple drones is suboptimal compared to a single drone navigating the entire grid. But, as a consequence of having multiple drones, the maximum distance travelled per drone (as shown in the table) is reduced and so is the total time of scouting.
+
+\begin{table}[!ht]
+    \centering
+    \begin{tabular}{|l|l|l|l|l|l|l|l|l|l|}
+    \hline
+        Area & Optimal dist. & Total dist. & Bots & Bot dist.\\ \hline
+        100 & 99 & 100.4 & 1 & 100.41 \\ \hline
+        100 & 99 & 103.65 & 3 & 50.8 \\ \hline
+        400 & 399 & 400.41 & 1 & 400.41 \\ \hline
+        400 & 399 & 403.65 & 3 & 200.41 \\ \hline
+        900 & 899 & 900.41 & 1 & 900.41 \\ \hline
+        900 & 899 & 903.65 & 3 & 450.82 \\ \hline
+    \end{tabular}
+\end{table}
+
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{images/Global_Planner.png}
+\caption{Path charted by global planner for 3 drones}
+\end{figure}
+
 
 In practice, the global planner could use a satellite image of a forest and plan drones to cover it. 
 
-Complexity
-What could be improved / is it practical?
-Alternatives
-Supported by results
+%[maybe add a time est column]
+% \subsection{Path planning and Control}
+
+
+
 
 \subsection{Local maps}
 
 To reduce overall computation time, RRT computes multiple obstacle free paths
-using a series of local maps to reach the global goal [refer results]. This is done by slicing sections of the global occupancy map just enough to include the next goal given by the global planner to avoid use of a global occupancy map. By doing this the computation time is reduced by x. TODO \\ 
+using a series of local maps to reach the global goal. This is done by slicing sections of the global occupancy map just enough to include the next goal given by the global planner to avoid use of a global occupancy map. Fig. 5 clearly shows that local maps of small areas combined would take shorter time to compute compared to the exponential increase of using a single global map.
 
 \subsection{Obstacle detections}
 With that said, all obstacles are revealed within a local map for the drone to compute a obstacle free path. The local map's dimensions can differ depending on the global map and grid size, which means detecting all obstacles within a local map is unlikely in the real world where sensors have a limited range of detection. \\
- A potential improvement here to imitate a real world scenario is using a dynamic local map and revealing obstacles only within a certain radius of the drone.
+ A potential improvement here to obtain a practical performance measure is using a dynamic local map and revealing obstacles only within a certain radius of the drone. \\
+
+Code for the simulation can be found \href{https://github.com/s-desh/drone_path}{here}
 

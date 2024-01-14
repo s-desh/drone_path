@@ -1,10 +1,8 @@
 %! Date = 08/01/24
 
-\subsection{Global Path Planning}
+\subsection{Global Planner: Breadth First Search}
 
-For global path planning, the environment is represented as a grid of a certain area size. The objective is to provide separate paths for all the drones while covering all the cells in the grid. A breadth-first search (BFS) strategy is employed for our multi-drone global path planning algorithm. BFS is chosen for its completeness. In BFS, one vertex is selected at a time, visited, and marked, and then its adjacent vertices are visited and stored in the queue. This process ensures that all cells are covered.
-
-\subsection{Key Components}
+For global path planning, the environment is represented as a grid of a certain area size. The objective is to provide separate paths for all the drones while covering all the cells in the grid. A breadth-first search (BFS) strategy is employed for our multi-drone global path planning algorithm. BFS is chosen for its completeness. In BFS, one vertex is selected at a time, visited, and marked, and then its adjacent vertices are visited and stored in the queue. This process ensures that all cells are covered. Key components are:
 
 \subsubsection{GlobalPlanner Class}
 
@@ -17,12 +15,12 @@ For global path planning, the environment is represented as a grid of a certain 
 
 \begin{itemize}
     \item Accepts the size of the grid (\texttt{grid\_size}) and the number of drones (\texttt{num\_drones}) as parameters.
-    \item Initializes a grid, starting positions for each drone which are same (0, 0), and a list of \texttt{GlobalPlanner} instances.
+    \item Initializes a grid, starting positions for each drone which are same (0, 0) but at different altitude, and a list of \texttt{GlobalPlanner} instances.
     \item Utilizes a BFS strategy to determine the paths for each drone, maintaining a queue of positions to visit using \texttt{deque} data structure.
     \item The algorithm ensures that each drone moves in a way that approximately covers similar cell counts, preventing significant discrepancies in their paths.
     \item Returns a dictionary containing paths for each drone, where keys are drone identifiers ("Drone 1", "Drone 2", etc.).
 \end{itemize}
 
-\subsection{Execution}
+\subsubsection{Execution}
 
 The code initializes a grid of zeros with dimensions \texttt{grid\_size x grid\_size}. It then places drones at specified starting position (0, 0) and initiates the BFS algorithm from each drone's initial position. The BFS process continues until all drones have explored the grid exhaustively without revisiting any cell.

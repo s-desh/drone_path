@@ -42,6 +42,13 @@
 \usepackage{subcaption}
 \usepackage{algorithmicx}
 \usepackage{algpseudocode}
+\usepackage[
+backend=biber,
+style=numeric,
+sorting=none
+]{biblatex}
+\addbibresource{references.bib}
+
 \title{\LARGE \bf Multi-Agent Planning to Detect Obstacles and Navigate in an Unknown Environment}
 
 
@@ -71,7 +78,7 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
- Rescue operations for individuals lost in a forest require drones to quickly scan a large unknown environment and quickly provide relief. We propose to work on this problem by breaking it into 2 stages. 1) multiple drones cooperatively scan the entire area with unknown obstacles communincating with each other to create a single map. 2) Once a person is found, another drone can be sent from the base to their location to provide relief by finding an optimal path.
+ Rescue operations for individuals lost in a forest can use drones to quickly scan a large unknown environment and provide relief. We propose a solution by making multiple drones cooperatively scan the entire area. Through a simulation we show that the combination of an efficient global and local planner can reduce search time significantly.
 \end{abstract}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -87,11 +94,10 @@
 \section{RESULTS}
 \input{results}
 \section{DISCUSSION}
-\input{discussion}
-1/2-1 page
+\input{discussion}  
  
 
-\addtolength{\textheight}{-12cm}   % This command serves to balance the column lengths
+\addtolength{\textheight}{-12cm}  % This command serves to balance the column lengths
                                   % on the last page of the document manually. It shortens
                                   % the textheight of the last page by a suitable amount.
                                   % This command does not take effect until the next page
@@ -110,7 +116,6 @@
 
 
 
-\bibliographystyle{ieeetr}
-\bibliography{references}
+\printbibliography
 
 \end{document}
